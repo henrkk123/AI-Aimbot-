@@ -10,23 +10,12 @@ echo.
 :: FORCE MODE: We assume the user ran this because something is wrong.
 :: We will clean EVERYTHING.
 
-echo Detected desire for SPEED.
-echo We will reinstall PyTorch with NVIDIA CUDA support.
-echo.
-echo 1. Cleaning Cache & Removing CPU version...
+:: Call the Python Logic (It is smarter than Batch)
+if not exist .venv (
+    python -m venv .venv
+)
 call .venv\Scripts\activate.bat
-pip cache purge
-pip uninstall -y torch torchvision torchaudio numpy
 
-echo.
-echo 2. Installing PREVIEW Version (RTX 50-Series Support)...
-:: RTX 5070 (SM_120) requires PyTorch Nightly + CUDA 12.6
-:: We also install ultralytics HERE so it accepts the nightly build
-pip install --pre torch torchvision torchaudio ultralytics --index-url https://download.pytorch.org/whl/nightly/cu126
+python force_install.py
 
-echo.
-echo ==================================================
-echo    DONE. RUN 'train_model.bat' NOW.
-echo    You should see "NVIDIA GPU" in the log.
-echo ==================================================
 pause
