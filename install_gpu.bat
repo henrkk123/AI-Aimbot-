@@ -13,14 +13,15 @@ echo.
 echo Detected desire for SPEED.
 echo We will reinstall PyTorch with NVIDIA CUDA support.
 echo.
-echo 1. Removing CPU version...
+echo 1. Cleaning Cache & Removing CPU version...
 call .venv\Scripts\activate.bat
-pip uninstall -y torch torchvision torchaudio
+pip cache purge
+pip uninstall -y torch torchvision torchaudio numpy
 
 echo.
-echo 2. Installing CUDA 11.8 version (Maximum Compatibility)...
-:: CUDA 11.8 is the "Golden Standard" for YOLOv8 stability
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+echo 2. Installing CUDA 11.8 (Force Version 2.1.2)...
+:: Explicitly forcing the +cu118 wheel to prevent CPU fallback
+pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118
 
 echo.
 echo ==================================================
