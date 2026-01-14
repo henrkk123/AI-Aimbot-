@@ -5,7 +5,9 @@ const isDev = process.env.NODE_ENV === 'development';
 let mainWindow;
 
 function createWindow() {
-    const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+    // Use 'bounds' to get the full screen size (including taskbar area)
+    // This is critical for game overlays to cover the entire resolution.
+    const { width, height } = screen.getPrimaryDisplay().bounds;
 
     mainWindow = new BrowserWindow({
         width: width,

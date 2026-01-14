@@ -54,12 +54,23 @@ if ! ps -p $SERVER_PID > /dev/null; then
    exit 1
 fi
 
+# Check Node Modules
+if [ ! -d "overlay-ui/node_modules" ]; then
+    echo "❌ ERROR: UI dependencies not found."
+    echo "   First time setup? Please run these commands in terminal:"
+    echo "   cd overlay-ui"
+    echo "   npm install"
+    echo "   cd .."
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+
 # Start Frontend
 echo "🎨 Starting Liquid UI..."
 cd overlay-ui
 # We try 'npm run electron' which works in dev. 
 # If you built the app, we could launch the .app instead, but this is safer for dev.
-npm run electron
+npm run dev:all
 
 # Cleanup
 echo "🛑 Shutting down AI Core..."

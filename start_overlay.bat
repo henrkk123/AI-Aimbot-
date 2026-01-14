@@ -49,7 +49,8 @@ timeout /t 3 /nobreak >nul
 :: 6. Launch Frontend
 echo [2/2] Starting Liquid UI...
 cd overlay-ui
-call npm run electron
+:: We use dev:all to run Vite + Electron together
+call npm run dev:all
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] Application crashed.
