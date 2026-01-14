@@ -1,38 +1,41 @@
 import ctypes
-import os
+import random
+import time
 
-# Windows User32 API Constants
+# Mouse Event Constants
 MOUSEEVENTF_MOVE = 0x0001
 MOUSEEVENTF_ABSOLUTE = 0x8000
 
-def move_mouse_to(target_x, target_y, smooth_factor=0.5):
+def get_mouse_pos():
+    class POINT(ctypes.Structure):
+        _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+    pt = POINT()
+    ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+    return pt.x, pt.y
+
+def move_mouse_to(target_x, target_y, smooth_factor=0.3, humanization=0.0):
     """
-    Moves the mouse RELATIVE to current position locally.
-    This works in FPS games where 'cursor' is locked to center.
+    Moves mouse towards target with smoothing and optional humanized Bezier jitter.
     """
     try:
-        # 1. Get current position (Screen coordinates)
-        class POINT(ctypes.Structure):
-            _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+        curr_x, curr_y = get_mouse_pos()
         
-        pt = POINT()
-        ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+        # Calculate Delta
+        dx_raw = target_x - curr_x
+        dy_raw = target_y - curr_y
         
-        # 2. Calculate Delta (Distance to target)
-        dx = int((target_x - pt.x) * smooth_factor)
-        dy = int((target_y - pt.y) * smooth_factor)
+        # Apply smoothing
+        dx = int(dx_raw * smooth_factor)
+        dy = int(dy_raw * smooth_factor)
         
-        # 3. Send Hardware Input (Relative Move)
-        # This bypasses windows pointer ballistics and works in Raw Input games
+        # --- HUMANIZATION (Stealth Jitter) ---
+        if humanization > 0 and (abs(dx) > 1 or abs(dy) > 1):
+            jitter_x = random.uniform(-humanization * 5, humanization * 5)
+            jitter_y = random.uniform(-humanization * 5, humanization * 5)
+            dx = int(dx + jitter_x)
+            dy = int(dy + jitter_y)
+
         if dx != 0 or dy != 0:
             ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, dx, dy, 0, 0)
-            
     except Exception as e:
-        print(f"Mouse Error: {e}")
-
-def click_mouse():
-    # Standard Click (often works, but we can upgrade to ctypes if needed)
-    # MOUSEEVENTF_LEFTDOWN = 0x0002
-    # MOUSEEVENTF_LEFTUP = 0x0004
-    ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0) # Down
-    ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0) # Up
+        print(f"Mouse Control Error: {e}")

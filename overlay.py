@@ -106,6 +106,8 @@ class OverlayApp(ctk.CTk):
         self.create_slider("Conf Threshold", self.conf_threshold, 0.1, 1.0)
         self.create_slider("Target Offset (Head-Chest)", self.target_offset, -0.5, 0.5)
         self.create_slider("Prediction Intensity (Leading)", self.prediction_factor, 0.0, 5.0)
+        self.create_slider("Humanization (Stealth)", self.humanization, 0.0, 1.0)
+        self.create_slider("Lock Stability (Priority)", self.lock_stability, 0.0, 1.0)
 
         self.train_ui_btn = ctk.CTkButton(self.control_frame, text="NEURAL TRAINING", command=self.open_training_ui,
                                           fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
@@ -155,6 +157,8 @@ class OverlayApp(ctk.CTk):
             "conf_threshold": 0.5,
             "target_offset": -0.2, # Default slightly above center (Chest/Neck)
             "prediction_factor": 1.0, # New Prediction setting
+            "humanization": 0.2,     # v0.4.0
+            "lock_stability": 0.5,   # v0.4.0
             "combat_mode": False
         }
         
@@ -171,6 +175,8 @@ class OverlayApp(ctk.CTk):
         self.conf_threshold = ctk.DoubleVar(value=defaults["conf_threshold"])
         self.target_offset = ctk.DoubleVar(value=defaults["target_offset"])
         self.prediction_factor = ctk.DoubleVar(value=defaults["prediction_factor"])
+        self.humanization = ctk.DoubleVar(value=defaults["humanization"])
+        self.lock_stability = ctk.DoubleVar(value=defaults["lock_stability"])
         self.mouse_control_var = ctk.BooleanVar(value=defaults["combat_mode"])
 
     def save_config(self):
@@ -181,6 +187,8 @@ class OverlayApp(ctk.CTk):
             "conf_threshold": self.conf_threshold.get(),
             "target_offset": self.target_offset.get(),
             "prediction_factor": self.prediction_factor.get(),
+            "humanization": self.humanization.get(),
+            "lock_stability": self.lock_stability.get(),
             "combat_mode": self.mouse_control_var.get()
         }
         try:
@@ -201,6 +209,7 @@ class OverlayApp(ctk.CTk):
                 self.vision.sticky_radius = self.magnet_radius.get()
                 self.vision.target_offset = self.target_offset.get()
                 self.vision.prediction_factor = self.prediction_factor.get() # Update prediction factor
+                self.vision.lock_stability = self.lock_stability.get()
             self.save_config() # Save config on slider change
 
         slider = ctk.CTkSlider(self.settings_frame, from_=min_val, to=max_val, variable=variable, command=update_lbl,
@@ -328,7 +337,7 @@ class OverlayApp(ctk.CTk):
                     if dist < rad: 
                         smooth = self.magnet_smooth.get()
                     
-                    move_mouse_to(aim_x, aim_y, smooth_factor=smooth)
+                    move_mouse_to(aim_x, aim_y, smooth_factor=smooth, humanization=self.humanization.get())
                     self.canvas.create_text(scx, 50, text="MAGNETIC LOCK ENGAGED", fill="#ff00ff", font=("Orbitron", 24, "bold"))
                 except Exception as e: print(f"Mouse Error: {e}")
         

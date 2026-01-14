@@ -77,6 +77,7 @@ class VisionEngine:
         self.velocity_x = 0.0
         self.velocity_y = 0.0
         self.prediction_factor = 0.0 # Will be updated by HUD
+        self.lock_stability = 0.5    # 0.0 to 1.0 (Higher = harder to switch targets)
 
     def capture_screen(self):
         """
@@ -135,12 +136,22 @@ class VisionEngine:
                      if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.10):
                          continue 
                 
+                # Score = Conf + Sticky Bonus + Lock Stability
                 score = confidence
+                
                 if self.last_target_center:
                     lcx, lcy = self.last_target_center
                     dist = np.hypot(cx - lcx, cy - lcy)
+                    
+                    # 1. Sticky Bonus (Area-based)
                     if dist < self.sticky_radius:
-                        score += 0.5
+                        score += 0.5 
+                    
+                    # 2. Lock Stability (Proximity-based priority)
+                    # Gives a massive boost if the target is almost exactly where it was
+                    # effectively 'locking' onto a single entity.
+                    proximity_bonus = max(0, (100 - dist) / 100) * self.lock_stability
+                    score += proximity_bonus
                 
                 if score > max_score:
                     max_score = score
