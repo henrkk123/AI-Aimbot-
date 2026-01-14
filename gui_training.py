@@ -1,10 +1,10 @@
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import filedialog, messagebox
-import threading
-from ultralytics import YOLO
 import os
 import sys
+import threading
+# DO NOT import torch or ultralytics globally, to allow for environment overrides later
 
 # Validate CustomTkinter is effectively imported
 try:
@@ -284,10 +284,15 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.log("Note: Results will be saved to the 'runs' folder.")
         
         try:
-            # Check for GPU
-            import torch
-            device = 'cpu'
+            # --- ISOLATED COMPUTE INITIALIZATION ---
+            if device_mode == "CPU":
+                 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+                 self.log("🚫 Hiding GPU to ensure stable CPU computation.")
             
+            import torch
+            from ultralytics import YOLO
+            
+            device = 'cpu'
             if device_mode == "GPU (0)":
                  device = '0'
             elif device_mode == "CPU":
