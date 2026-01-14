@@ -1,25 +1,38 @@
-import pyautogui
-import math
+import ctypes
+import os
 
-# Fail-safe
-pyautogui.FAILSAFE = True
-# CRITICAL FOR GAMING: Remove built-in delays
-pyautogui.PAUSE = 0.0
+# Windows User32 API Constants
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_ABSOLUTE = 0x8000
 
 def move_mouse_to(target_x, target_y, smooth_factor=0.5):
     """
-    Moves the mouse towards the target (x, y).
+    Moves the mouse RELATIVE to current position locally.
+    This works in FPS games where 'cursor' is locked to center.
     """
-    current_x, current_y = pyautogui.position()
-    
-    dx = target_x - current_x
-    dy = target_y - current_y
-    
-    new_x = current_x + (dx * smooth_factor)
-    new_y = current_y + (dy * smooth_factor)
-    
-    # Instant move commands for gaming
-    pyautogui.moveTo(new_x, new_y, duration=0, _pause=False)
+    try:
+        # 1. Get current position (Screen coordinates)
+        class POINT(ctypes.Structure):
+            _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+        
+        pt = POINT()
+        ctypes.windll.user32.GetCursorPos(ctypes.byref(pt))
+        
+        # 2. Calculate Delta (Distance to target)
+        dx = int((target_x - pt.x) * smooth_factor)
+        dy = int((target_y - pt.y) * smooth_factor)
+        
+        # 3. Send Hardware Input (Relative Move)
+        # This bypasses windows pointer ballistics and works in Raw Input games
+        if dx != 0 or dy != 0:
+            ctypes.windll.user32.mouse_event(MOUSEEVENTF_MOVE, dx, dy, 0, 0)
+            
+    except Exception as e:
+        print(f"Mouse Error: {e}")
 
 def click_mouse():
-    pyautogui.click(_pause=False)
+    # Standard Click (often works, but we can upgrade to ctypes if needed)
+    # MOUSEEVENTF_LEFTDOWN = 0x0002
+    # MOUSEEVENTF_LEFTUP = 0x0004
+    ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0) # Down
+    ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0) # Up

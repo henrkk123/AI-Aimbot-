@@ -76,13 +76,24 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         except ImportError as e:
             print(f"❌ CRITICAL MISSING LIB: {e}")
         
-        # Dataset Selection
-        self.select_ds_btn = ctk.CTkButton(self.left_panel, text="Select Image Folder", 
-                                           command=self.select_dataset_folder, fg_color="#333", border_color="#666", border_width=1)
-        self.select_ds_btn.pack(pady=10, padx=20, fill="x")
+        # Dataset List
+        self.dataset_paths = []
         
-        self.selected_path_label = ctk.CTkLabel(self.left_panel, text="No folder selected", text_color="#666", wraplength=200)
-        self.selected_path_label.pack(pady=(0, 20))
+        self.ds_btn_frame = ctk.CTkFrame(self.left_panel, fg_color="transparent")
+        self.ds_btn_frame.pack(fill="x", padx=20, pady=5)
+        
+        self.add_ds_btn = ctk.CTkButton(self.ds_btn_frame, text="+ Add Folder", width=120,
+                                           command=self.add_dataset_folder, fg_color="#333", border_color="#666", border_width=1)
+        self.add_ds_btn.pack(side="left", padx=(0, 5))
+        
+        self.clear_ds_btn = ctk.CTkButton(self.ds_btn_frame, text="Clear", width=60,
+                                           command=self.clear_datasets, fg_color="#500", hover_color="#800", border_width=0)
+        self.clear_ds_btn.pack(side="right")
+        
+        self.ds_listbox = ctk.CTkTextbox(self.left_panel, height=80, text_color="#ccc")
+        self.ds_listbox.pack(pady=5, padx=20, fill="x")
+        self.ds_listbox.insert("1.0", "No datasets selected.\n")
+        self.ds_listbox.configure(state="disabled")
         
         self.yaml_path = None
         self.base_model_path = 'yolov8n.pt' # Default to new training
@@ -126,34 +137,79 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                                        command=self.start_training_thread)
         self.train_btn.pack(pady=20)
 
-    def select_dataset_folder(self):
+    def add_dataset_folder(self):
         folder_path = filedialog.askdirectory()
         if folder_path:
-            self.selected_path_label.configure(text=os.path.basename(folder_path), text_color="#ccc")
-            self.log(f"Selected folder: {folder_path}")
-            
-            # Validate Dataset
-            valid, msg = self.validate_dataset(folder_path)
-            if not valid:
-                self.log(f"⚠️ DATASET WARNING: {msg}")
-            
-            # Create/Update config
+            if folder_path not in self.dataset_paths:
+                self.dataset_paths.append(folder_path)
+                self.update_ds_list()
+                self.log(f"➕ Added dataset: {os.path.basename(folder_path)}")
+                
+    def clear_datasets(self):
+        self.dataset_paths = []
+        self.update_ds_list()
+        self.log("🗑️ Datasets cleared.")
+        
+    def update_ds_list(self):
+        self.ds_listbox.configure(state="normal")
+        self.ds_listbox.delete("1.0", "end")
+        if not self.dataset_paths:
+             self.ds_listbox.insert("1.0", "No datasets selected.\n")
+        else:
+            for p in self.dataset_paths:
+                self.ds_listbox.insert("end", f"• {os.path.basename(p)}\n")
+        self.ds_listbox.configure(state="disabled")
+
+    def prepare_merged_dataset(self):
+        if not self.dataset_paths: return None
+        
+        # If only 1, use it directly (Legacy Mode)
+        if len(self.dataset_paths) == 1:
+            folder_path = self.dataset_paths[0]
+            # Create config
             yaml_path = os.path.join(folder_path, "data.yaml")
-            self.log("Generating smart config...")
             try:
                 with open(yaml_path, 'w') as f:
-                    # Use absolute path ensures YOLO finds it regardless of where it's run
                     abs_path = os.path.abspath(folder_path)
                     f.write(f"path: {abs_path}\n")
                     f.write(f"train: .\n") 
                     f.write(f"val: .\n") 
-                    # Assuming standard classes, but ideally this is customizable
                     f.write("names:\n  0: Target\n")
-                self.log(f"✅ Config created: {yaml_path}")
-                self.yaml_path = yaml_path
-            except Exception as e:
-                self.log(f"❌ Error creating yaml: {e}")
-                self.yaml_path = None
+                return yaml_path
+            except:
+                return None
+                
+        # Merge Mode
+        import shutil
+        self.log(f"🌪️ Merging {len(self.dataset_paths)} datasets...")
+        merged_dir = os.path.abspath("merged_training_data")
+        if os.path.exists(merged_dir): shutil.rmtree(merged_dir)
+        os.makedirs(merged_dir)
+        
+        total_imgs = 0
+        
+        for i, src in enumerate(self.dataset_paths):
+            self.log(f"   -> Copying {os.path.basename(src)}...")
+            for f in os.listdir(src):
+                if f.lower().endswith(('.jpg', '.png', '.txt')):
+                    # Prefix files to avoid collision
+                    # e.g. "dataset1_image0.jpg"
+                    new_name = f"{i}_{f}"
+                    shutil.copy2(os.path.join(src, f), os.path.join(merged_dir, new_name))
+                    if f.endswith('.txt'): total_imgs += 0 # ignore
+                    else: total_imgs += 1
+                    
+        self.log(f"✅ Merged {total_imgs} images into '{merged_dir}'")
+        
+        # Create Config
+        yaml_path = os.path.join(merged_dir, "data.yaml")
+        with open(yaml_path, 'w') as f:
+            f.write(f"path: {merged_dir}\n")
+            f.write(f"train: .\n") 
+            f.write(f"val: .\n") 
+            f.write("names:\n  0: Target\n")
+            
+        return yaml_path
 
     def select_base_model(self):
         path = filedialog.askopenfilename(filetypes=[("YOLO Model", "*.pt")])
@@ -189,8 +245,11 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.console_out.see("end")
 
     def start_training_thread(self):
+        # Prepare Data
+        self.yaml_path = self.prepare_merged_dataset()
+        
         if not self.yaml_path:
-            self.log("❌ ERROR: Please select a valid dataset first.")
+            self.log("❌ ERROR: Please select at least one dataset.")
             return
             
         if self.training_active:
