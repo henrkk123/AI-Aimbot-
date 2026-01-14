@@ -54,17 +54,17 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
             except:
                 pass
                 
+            self.is_gpu = False
             device = "CPU"
-            is_good = False
+            
             if torch.cuda.is_available():
                 device = f"NVIDIA GPU ({torch.cuda.get_device_name(0)})"
-                is_good = True
+                self.is_gpu = True
             elif torch.backends.mps.is_available():
                 device = "APPLE SILICON (MPS)"
-                is_good = True
                 
             print(f"✅ Environment OK. Device: {device}")
-            if not is_good:
+            if not self.is_gpu and not torch.backends.mps.is_available():
                 print("⚠️ WARNING: RUNNING ON CPU. TRAINING WILL BE SLOW.")
                 print("👉 Use 'install_gpu.bat' to enable your RTX card.")
             # We can't update UI here easily as it's init, but print is good.
@@ -82,11 +82,14 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.yaml_path = None
         
         # Params
-        self.epochs_entry = ctk.CTkEntry(self.left_panel, placeholder_text="Epochs (e.g. 50)")
-        self.epochs_entry.insert(0, "50")
+        self.epochs_entry = ctk.CTkEntry(self.left_panel, placeholder_text="Epochs")
+        # Smart Default: 100 for GPU, 50 for others
+        default_epochs = "100" if getattr(self, "is_gpu", False) else "50"
+        self.epochs_entry.insert(0, default_epochs)
         self.epochs_entry.pack(pady=5, padx=20, fill="x")
         
-        ctk.CTkLabel(self.left_panel, text="Recommended: 50-100+", text_color="gray", font=("Arial", 10)).pack(pady=(0, 10))
+        reco_text = "Recommended: 100+ (RTX Detected)" if getattr(self, "is_gpu", False) else "Recommended: 50 (CPU/MPS)"
+        ctk.CTkLabel(self.left_panel, text=reco_text, text_color="gray", font=("Arial", 10)).pack(pady=(0, 10))
         
         # Right: Output
         self.right_panel = ctk.CTkFrame(self.grid_frame, fg_color="#1a1a1a", corner_radius=10, border_width=1, border_color="#333")
