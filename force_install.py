@@ -46,14 +46,41 @@ def check_driver():
         print("⚠️  Warning: Could not detect NVIDIA driver version. Ensure it is 570+.")
         return True
 
+def check_python_version():
+    major, minor = sys.version_info.major, sys.version_info.minor
+    print(f"👉 PYTHON VERSION: {sys.version.split()[0]}")
+    
+    # 3.10 and 3.11 are the "Golden" versions for AI libraries.
+    # 3.12 is okay for some, but 3.13 is way too new for torch nightly.
+    if major != 3 or minor < 10 or minor > 12:
+        print("\n" + "!"*50)
+        print("❌ CRITICAL ERROR: WRONG PYTHON VERSION!")
+        print(f"   You are using Python {major}.{minor}.")
+        print("   AI libraries (Torch/YOLO) HATE this version.")
+        print("\n   PLEASE DO THIS:")
+        print("   1. Uninstall your current Python.")
+        print("   2. Install Python 3.10.11 (The Golden Version).")
+        print("   🔗 Download: https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe")
+        print("   3. Make sure to check 'Add to PATH' during install!")
+        print("!"*50 + "\n")
+        time.sleep(2)
+        return False
+    return True
+
 # 0. System Check
 print(f"👉 RUNNING IN: {sys.prefix}")
 print(f"👉 PYTHON EXE: {sys.executable}")
+if not check_python_version():
+    input("Press Enter to close and fix your Python version...")
+    sys.exit(1)
+
 check_driver()
 
 py_pip = f'"{sys.executable}" -m pip'
 
-# 1. Purge
+# 0.5 Upgrade Pip (Fixes most "No matching distribution" errors)
+print("Step 0.5: UPGRADING PIP")
+run_cmd(f"{py_pip} install --upgrade pip")
 print("Step 1: CLEANUP")
 run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy")
 run_cmd(f"{py_pip} cache purge")
