@@ -7,18 +7,8 @@ echo ==================================================
 echo.
 
 :: 1. Check if already active
-if exist .venv (
-    call .venv\Scripts\activate.bat
-    python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)"
-    if %ERRORLEVEL% EQU 0 (
-        echo.
-        echo ✅ GREAT NEWS: Your GPU is ALREADY working!
-        echo    No need to reinstall anything.
-        echo.
-        pause
-        exit /b
-    )
-)
+:: FORCE MODE: We assume the user ran this because something is wrong.
+:: We will clean EVERYTHING.
 
 echo Detected desire for SPEED.
 echo We will reinstall PyTorch with NVIDIA CUDA support.

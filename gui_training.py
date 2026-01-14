@@ -57,6 +57,11 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
             self.is_gpu = False
             device = "CPU"
             
+            print(f"🔍 DIAGNOSTICS:")
+            print(f"   - Torch: {torch.__version__}")
+            print(f"   - CUDA Support: {torch.version.cuda}")
+            print(f"   - GPUs Available: {torch.cuda.device_count()}")
+            
             if torch.cuda.is_available():
                 device = f"NVIDIA GPU ({torch.cuda.get_device_name(0)})"
                 self.is_gpu = True
