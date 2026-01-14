@@ -164,14 +164,10 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
     def prepare_merged_dataset(self):
         if not self.dataset_paths: return None
         
+        if len(self.dataset_paths) == 1:
+            folder_path = self.dataset_paths[0]
             # Create standard structure
-            train_img_dir = os.path.join(folder_path, "images", "train")
-            train_lbl_dir = os.path.join(folder_path, "labels", "train")
-            
-            # If standard structure already exists, we are good.
-            # If not, YOLO might fail if files are just in the root.
-            # We'll create a temp yaml that points correctly.
-            
+            # (No need to copy, just point to it)
             yaml_path = os.path.join(folder_path, "data_neural.yaml")
             try:
                 with open(yaml_path, 'w') as f:
