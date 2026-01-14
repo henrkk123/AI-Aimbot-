@@ -1,13 +1,21 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 import threading
 from ultralytics import YOLO
 import os
+import sys
 
-class TrainingWindow(ctk.CTkToplevel):
-    def __init__(self, parent):
-        super().__init__(parent)
+# Validate CustomTkinter is effectively imported
+try:
+    ctk.set_appearance_mode("Dark")
+    ctk.set_default_color_theme("green")
+except Exception as e:
+    print(f"Error init CTK: {e}")
+
+class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone running
+    def __init__(self):
+        super().__init__()
         self.title("Training & Dataset Management")
         self.geometry("800x600")
         self.configure(fg_color="#0d0d0d")
@@ -198,3 +206,7 @@ class TrainingWindow(ctk.CTkToplevel):
         
         self.training_active = False
         self.train_btn.configure(text="START REAL TRAINING", state="normal", fg_color="#004400")
+
+if __name__ == "__main__":
+    app = TrainingWindow()
+    app.mainloop()
