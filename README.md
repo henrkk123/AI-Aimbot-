@@ -1,67 +1,82 @@
-# 🤖 CV-Overlay: High-Performance AI Aim Assist
+<div align="center">
 
-![Status](https://img.shields.io/badge/Status-Active-brightgreen)
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![React](https://img.shields.io/badge/React-19-blue)
-![Electron](https://img.shields.io/badge/Electron-Desktop-purple)
-![YOLOv8](https://img.shields.io/badge/AI-YOLOv8-red)
+# 🤖 CV-Overlay Pro
+### Next-Gen AI Aim Assist & Vision System
 
-A next-generation, hybrid computer vision overlay designed for high-refresh-rate gaming. It combines a lightweight Python/YOLOv8 backend for zero-latency inference with a modern Electron/React frontend for a stunning "Liquid Glass" visual experience.
+![Status](https://img.shields.io/badge/Status-Active-brightgreen?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-19-blue?style=for-the-badge&logo=react&logoColor=white)
+![Electron](https://img.shields.io/badge/Electron-Desktop-purple?style=for-the-badge&logo=electron&logoColor=white)
+![YOLOv8](https://img.shields.io/badge/AI-YOLOv8-red?style=for-the-badge&logo=ultralytics&logoColor=white)
 
-## ✨ Features
+<br />
 
--   **🚀 Zero-Latency Vision Engine**: Decoupled Python backend running YOLOv8 on your GPU (NVIDIA CUDA / Mac MPS).
--   **🎯 Intelligent ROI Scanning**: Dynamically focuses on the center screen (640x640) for 90% performance gains.
--   **💎 Liquid Glass UI**: A beautiful, transparent, and completely click-through overlay built with React & Framer Motion.
--   **⌨️ Global Hotkeys**: Press `0` to toggle Combat Mode (Aim Assist) instantly.
--   **🕸️ WebSocket Architecture**: 60 FPS smooth UI updates with 144Hz+ logic tick rate.
+**Zero Latency. Liquid Glass UI. GPU Accelerated.**
+<br />
+A hybrid computer vision overlay designed for high-refresh-rate gaming.
+<br />
 
-## 🛠️ Installation
+[**⬇️ Download & Install**](#-quick-start) • [**📚 Documentation**](INSTALL_GUIDE.md) • [**🐛 Report Bug**](../../issues)
 
-> **New to this?** Check out our detailed [**Beginner Installation Guide**](INSTALL_GUIDE.md) for step-by-step setup instructions.
-
-### Prerequisites
--   **Python 3.10+** (Create a virtual environment recommended)
--   **Node.js 18+**
-
-### Quick Setup
-
-1.  **Install Python Dependencies**:
-    ```bash
-    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
-    ```
-
-2.  **Install Node Dependencies**:
-    ```bash
-    cd overlay-ui
-    npm install
-    cd ..
-    ```
-
-## 🎮 Usage
-
-### One-Click Launch (Recommended)
-
-**Mac / Linux**:
- Double-click `start_overlay.command` or run:
-```bash
-./start_overlay.command
-```
-
-**Windows**:
-Double-click `start_overlay.bat`.
-
-### Manual Controls
--   **`0` (Zero)**: Toggle Aim Assist ("Combat Mode").
--   **Training**: Run `python gui_training.py` to open the Dataset Management & Training tool.
-
-## 📂 Project Structure
-
--   `/server.py` - The Brain. specific optimization logic for mouse movement and vision.
--   `/vision_engine.py` - GPU-accelerated Screen Capture & Inference.
--   `/overlay-ui/` - React/Electron Source Code.
--   `/gui_training.py` - Standalone utility for training custom YOLO models.
+</div>
 
 ---
 
-**Disclaimer**: This software is for educational and research purposes only. Use responsibly in online games.
+## ⚡️ Launch in 1 Click
+
+We built this for speed. No terminal needed after setup.
+
+### 🍎 For macOS
+> **Double-click** `start_overlay.command`
+
+### 🪟 For Windows
+> **Double-click** `start_overlay.bat`
+
+---
+
+## ✨ Why CV-Overlay Pro?
+
+| Feature | Description |
+| :--- | :--- |
+| **🚀 Zero-Latency Core** | Python backend runs decoupled on your **GPU** (CUDA/MPS) for instant inference. |
+| **💎 Liquid Glass UI** | A stunning, transparent **Electron/React** overlay with 144Hz animations. |
+| **🎯 Smart ROI** | Scans only the center 640px zone, boosting FPS by **90%**. |
+| **⌨️ Instante Bindings** | Toggle "Combat Mode" instantly with the `0` key via low-level hooks. |
+
+---
+
+## 🛠️ Quick Start
+
+New to this? Read our **[Step-by-Step Installation Guide](INSTALL_GUIDE.md)**.
+
+### Prerequisite Check
+```bash
+python --version   # Should be 3.10+
+node -v            # Should be 18+
+```
+
+### 1-Minute Setup
+```bash
+# 1. Install Python Core
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+
+# 2. Install UI
+cd overlay-ui && npm install && cd ..
+
+# 3. Launch!
+./start_overlay.command
+```
+
+---
+
+## 🎮 Controls
+
+- **`0` (Zero Key)**: Toggle **Combat Mode** (Aim Assist) ON/OFF.
+- **`start_overlay`**: Launches the Game Overlay.
+- **`train_model`**: Launches the Model Trainer.
+
+---
+
+<div align="center">
+  <sub>Built with ❤️ by <b>Henni12</b> using YoloV8 & Electron</sub>
+</div>
