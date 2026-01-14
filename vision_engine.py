@@ -69,7 +69,7 @@ class VisionEngine:
         
         return img
 
-    def detect_screen(self, conf_threshold=0.5):
+    def detect_screen(self, conf_threshold=0.30): # Lowered base threshold to catch fast movers
         """
         Captures screen ROI and runs inference. 
         Returns tuple: (x, y, w, h, conf) in GLOBAL coordinates.
@@ -114,9 +114,9 @@ class VisionEngine:
                 rel_x = cx - self.roi_left
                 rel_y = cy - self.roi_top
                 
-                # Config: Bottom 50% height, Center 25% width
-                if rel_y > (self.roi_size * 0.55): # Slightly below center
-                     if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.15):
+                # Config: Bottom 55% height, Center 10% width (More lenient)
+                if rel_y > (self.roi_size * 0.55): 
+                     if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.10): # Shrink width check to 10%
                          # print("👻 Ignored Player")
                          continue 
                 
