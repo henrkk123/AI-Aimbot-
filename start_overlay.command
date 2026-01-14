@@ -25,44 +25,27 @@ check_cmd() {
 check_cmd "python"
 check_cmd "npm"
 
-# Virtual Env Check
-if [ -d ".venv" ]; then
+# Auto-Heal: Python
+if [ ! -d ".venv" ]; then
+    echo "⚠️  First time run? Initializing Python Brain..."
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+else
     echo "✅ Found Virtual Environment (.venv)"
     source .venv/bin/activate
-else
-    echo "⚠️  No .venv found. Using system python."
-    echo "   (Make sure you installed dependencies with: pip install -r requirements.txt)"
 fi
 
-# Cleanup old processes
-pkill -f "python server.py"
-
-# Start Backend
-echo "🧠 Starting AI Core (server.py)..."
-python server.py &
-SERVER_PID=$!
-echo "✅ Server PID: $SERVER_PID"
-
-echo "⏳ Waiting 3 seconds for engine warmup..."
-sleep 3
-
-# Check if server is actually running
-if ! ps -p $SERVER_PID > /dev/null; then
-   echo "❌ ERROR: Backend died immediately. Check 'launcher_debug.log' details."
-   echo "   Possible cause: Missing dependencies (ultralytics, fastapi, etc.)"
-   read -p "Press Enter to exit..."
-   exit 1
-fi
-
-# Check Node Modules
+# Auto-Heal: UI
 if [ ! -d "overlay-ui/node_modules" ]; then
-    echo "❌ ERROR: UI dependencies not found."
-    echo "   First time setup? Please run these commands in terminal:"
-    echo "   cd overlay-ui"
-    echo "   npm install"
-    echo "   cd .."
-    read -p "Press Enter to exit..."
-    exit 1
+    echo "⚠️  UI Dependencies missing. Installing now..."
+    echo "   (This takes about 1-2 minutes, please wait)"
+    cd overlay-ui
+    npm install
+    cd ..
+    echo "✅ UI Ready."
+else
+    echo "✅ UI Dependencies Found."
 fi
 
 # Start Frontend

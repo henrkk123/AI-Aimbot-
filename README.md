@@ -63,24 +63,28 @@ python --version   # Should be 3.10+
 node -v            # Should be 18+
 ```
 
-### 1-Minute Setup
+## 🛠️ Quick Start
+
+New to this? Read our **[Step-by-Step Installation Guide](INSTALL_GUIDE.md)**.
+
+### 1. Prerequisites
+Ensure you have these installed:
+*   [Python 3.10+](https://www.python.org/) (Add to PATH!)
+*   [Node.js 18+](https://nodejs.org/)
+
+### 2. Launch
+The launcher will **automatically install** all dependencies on the first run.
 
 #### 🍎 Mac / Linux
 ```bash
-# 1. Install Dependencies
-pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
-cd overlay-ui && npm install && cd ..
-
-# 2. Launch!
 ./start_overlay.command
 ```
 
-#### 🪟 Windows (New!)
-All you need to do is run:
+#### 🪟 Windows
 ```bat
-setup_windows.bat
+start_overlay.bat
 ```
-Then launch with `start_overlay.bat`.
+*(Wait a few minutes on first launch for the self-healing system to finish)*
 
 ---
 

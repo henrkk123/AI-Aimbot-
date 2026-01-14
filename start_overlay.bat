@@ -29,11 +29,29 @@ if exist .venv\Scripts\activate.bat (
     echo [WARN] No .venv found. Using system python.
 )
 
-:: 3. Check Dependencies
+:: 3. Check & Auto-Heal Dependencies
 if not exist "overlay-ui\node_modules\" (
-    echo [ERROR] UI missing. Please run setup_windows.bat first!
-    pause
-    exit /b 1
+    echo [INFO] First time run detected (or broken install).
+    echo [AUTO] 🛠️ Healing system... This make take a few minutes.
+    
+    :: Python Setup
+    if not exist .venv (
+        echo [1/2] Creating Python Brain...
+        python -m venv .venv
+        call .venv\Scripts\activate.bat
+        pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+    )
+
+    :: Node Setup
+    echo [2/2] Installing Liquid UI...
+    cd overlay-ui
+    call npm install
+    cd ..
+    
+    echo [✅] System Ready. Launching...
+    echo.
+) else (
+    echo [✅] System Integrity OK.
 )
 
 :: 4. Kill old
