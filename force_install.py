@@ -46,17 +46,26 @@ run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy")
 run_cmd(f"{py_pip} cache purge")
 
 # 2. Install
-print("\nStep 2: INSTALLING NIGHTLY (CUDA 12.6)")
-install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy --extra-index-url https://download.pytorch.org/whl/nightly/cu126'
+print("\nStep 2: INSTALLING BLACKWELL-READY NIGHTLY (CUDA 12.8)")
+print("👉 Target: sm_120 / RTX 50-Series Support")
+install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
 run_cmd(install_cmd)
 
 # 3. Verify
 print("\nStep 3: VERIFICATION")
 if check_gpu():
+    import torch
+    print(f"   - Compute Capability: {torch.cuda.get_device_capability(0)}")
     print("\n✅ SUCCESS! YOUR GPU IS ACTIVE.")
     print("   You are ready to train.")
+    
+    print("\n==================================================")
+    print("⚠️  IMPORTANT: For RTX 5070/5080/5090 you MUST have")
+    print("    NVIDIA Driver version 570.xx or higher installed!")
+    print("==================================================")
 else:
     print("\n❌ FAILURE. Still seeing CPU?")
-    print("   Please screenshot this window and send it to developer.")
+    print("   1. Update your NVIDIA Driver (570+ required).")
+    print("   2. Run this script again.")
 
 input("\nPress Enter to exit...")
