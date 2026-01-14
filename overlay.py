@@ -8,6 +8,13 @@ import random
 import threading
 import json
 import os
+import ctypes
+from ctypes import windll
+
+# Windows Constants for Click-Through
+GWL_EXSTYLE = -20
+WS_EX_LAYERED = 0x80000
+WS_EX_TRANSPARENT = 0x20
 
 class OverlayApp(ctk.CTk):
     def __init__(self):
@@ -100,11 +107,16 @@ class OverlayApp(ctk.CTk):
         self.switch_frame = ctk.CTkFrame(self.menu_container, fg_color="transparent")
         self.switch_frame.pack(fill="x", padx=10)
 
-        # Mouse Control Switch (HOTKEY: 0)
         self.mouse_switch = ctk.CTkSwitch(self.switch_frame, text="MAGNET LOCK [0]", variable=self.mouse_control_var,
                                           progress_color="#ff00ff", button_color="#cc00cc", button_hover_color="#ff55ff",
                                           text_color="#ff00ff", font=("Orbitron", 11, "bold"))
         self.mouse_switch.pack(side="left", padx=5, pady=10)
+        
+        # FOV Toggle
+        self.fov_switch = ctk.CTkSwitch(self.switch_frame, text="FOV RING", variable=self.show_fov,
+                                         progress_color="#00ffff", button_color="#00cccc",
+                                         text_color="#00ffff", font=("Orbitron", 11, "bold"))
+        self.fov_switch.pack(side="left", padx=5, pady=10)
 
         self.settings_btn = ctk.CTkButton(self.menu_container, text="⚙️ SETTINGS", width=100,
                                           fg_color="#1a1a1a", hover_color="#2a2a2a", text_color="#00ffff",
@@ -197,8 +209,9 @@ class OverlayApp(ctk.CTk):
         self.prediction_factor = ctk.DoubleVar(value=defaults["prediction_factor"])
         self.humanization = ctk.DoubleVar(value=defaults["humanization"])
         self.lock_stability = ctk.DoubleVar(value=defaults["lock_stability"])
-        self.mask_width = ctk.DoubleVar(value=defaults.get("mask_width", 0.0))    # v0.5.0
-        self.mask_height = ctk.DoubleVar(value=defaults.get("mask_height", 0.0))  # v0.5.0
+        self.mask_width = ctk.DoubleVar(value=defaults.get("mask_width", 0.0))    
+        self.mask_height = ctk.DoubleVar(value=defaults.get("mask_height", 0.0))  
+        self.show_fov = ctk.BooleanVar(value=defaults.get("show_fov", True)) # v0.5.1
         self.mouse_control_var = ctk.BooleanVar(value=defaults["combat_mode"])
 
     def save_config(self):
@@ -213,6 +226,7 @@ class OverlayApp(ctk.CTk):
             "lock_stability": self.lock_stability.get(),
             "mask_width": self.mask_width.get(),
             "mask_height": self.mask_height.get(),
+            "show_fov": self.show_fov.get(),
             "combat_mode": self.mouse_control_var.get()
         }
         try:
@@ -318,9 +332,11 @@ class OverlayApp(ctk.CTk):
         self.canvas.create_line(scx, scy-5, scx, scy+5, fill="#00ffff", width=1)
 
         # Show Magnet Radius while tuning
-        if self.settings_visible:
+        # --- FOV CIRCLE (MAGNET RADIUS) ---
+        if self.settings_visible or self.show_fov.get():
             r = self.magnet_radius.get()
-            self.canvas.create_oval(scx - r, scy - r, scx + r, scy + r, outline="#555555", dash=(4, 4))
+            color = "#00ffff" if not self.settings_visible else "#555555"
+            self.canvas.create_oval(scx - r, scy - r, scx + r, scy + r, outline=color, dash=(4, 4), width=1)
             
             # --- MASK VISUALIZATION (v0.5.0) ---
             mw = self.mask_width.get()
