@@ -70,27 +70,45 @@ class TrainingWindow(ctk.CTkToplevel):
             self.selected_path_label.configure(text=os.path.basename(folder_path), text_color="#ccc")
             self.log(f"Selected folder: {folder_path}")
             
-            # Check for data.yaml, if not exist, create it
+            # Validate Dataset
+            valid, msg = self.validate_dataset(folder_path)
+            if not valid:
+                self.log(f"⚠️ DATASET WARNING: {msg}")
+            
+            # Create/Update config
             yaml_path = os.path.join(folder_path, "data.yaml")
-            if not os.path.exists(yaml_path):
-                self.log("No data.yaml found. Generating auto-config...")
-                try:
-                    with open(yaml_path, 'w') as f:
-                        # Simple config assuming images are in the folder
-                        # Note: YOLO usually expects 'train/images' structure, but absolute paths work too.
-                        # We set 'train' and 'val' to the selected folder.
-                        f.write(f"path: {folder_path}\n")
-                        f.write(f"train: .\n")
-                        f.write(f"val: .\n")
-                        f.write("names:\n  0: Target\n")
-                    self.log(f"Created config: {yaml_path}")
-                except Exception as e:
-                    self.log(f"Error creating yaml: {e}")
-                    return
-            else:
-                self.log("Found existing data.yaml.")
-                
-            self.yaml_path = yaml_path
+            self.log("Generating smart config...")
+            try:
+                with open(yaml_path, 'w') as f:
+                    # Use absolute path ensures YOLO finds it regardless of where it's run
+                    abs_path = os.path.abspath(folder_path)
+                    f.write(f"path: {abs_path}\n")
+                    f.write(f"train: .\n") 
+                    f.write(f"val: .\n") 
+                    # Assuming standard classes, but ideally this is customizable
+                    f.write("names:\n  0: Target\n")
+                self.log(f"✅ Config created: {yaml_path}")
+                self.yaml_path = yaml_path
+            except Exception as e:
+                self.log(f"❌ Error creating yaml: {e}")
+                self.yaml_path = None
+
+    def validate_dataset(self, path):
+        """Checks if the folder actually contains images and labels."""
+        images = [f for f in os.listdir(path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp'))]
+        labels = [f for f in os.listdir(path) if f.lower().endswith('.txt') and f != "classes.txt"]
+        
+        if not images:
+            return False, "No images found in folder!"
+        if len(images) > 0 and len(labels) == 0:
+            return False, "Found images but NO label files (.txt). Model will learn nothing!"
+        
+        # Simple ratio check
+        if len(labels) < len(images) * 0.5:
+             return True, f"Warning: Only {len(labels)} labels for {len(images)} images. Some data is unlabeled."
+             
+        self.log(f"📊 Dataset Stats: {len(images)} Images, {len(labels)} Labels.")
+        return True, "Dataset looks healthy."
 
     def log(self, message):
         self.console_out.insert("end", message + "\n")
@@ -98,15 +116,15 @@ class TrainingWindow(ctk.CTkToplevel):
 
     def start_training_thread(self):
         if not self.yaml_path:
-            self.log("ERROR: Please select a data.yaml file first.")
+            self.log("❌ ERROR: Please select a valid dataset first.")
             return
             
         if self.training_active:
-            self.log("WARNING: Training already in progress.")
+            self.log("⚠️ Training already in progress.")
             return
 
         self.training_active = True
-        self.train_btn.configure(text="TRAINING RUNNING...", state="disabled", fg_color="#550000")
+        self.train_btn.configure(text="TRAINING IN PROGRESS...", state="disabled", fg_color="#550000")
         
         epochs = 10
         try:
@@ -114,26 +132,44 @@ class TrainingWindow(ctk.CTkToplevel):
         except:
             pass
             
-        # Start in thread to not freeze UI
+        # Start in thread
         t = threading.Thread(target=self.run_yolo_train, args=(self.yaml_path, epochs))
         t.start()
 
     def run_yolo_train(self, data_path, epochs):
-        self.log(f"Initializing YOLOv8n training for {epochs} epochs...")
-        self.log("Downloading model if needed...")
+        self.log(f"🚀 Initializing YOLOv8n Training ({epochs} epochs)...")
+        self.log("Note: Results will be saved to the 'runs' folder.")
         
         try:
+            # Check for GPU
+            import torch
+            device = '0' if torch.cuda.is_available() else 'cpu'
+            if torch.backends.mps.is_available():
+                device = 'mps'
+            
+            self.log(f"💻 Training Device: {device.upper()}")
+            
             model = YOLO('yolov8n.pt')
             
-            # Train
-            self.log("Starting training process...")
-            results = model.train(data=data_path, epochs=epochs, imgsz=640)
+            self.log("Starting training process... (Check terminal for detailed progress)")
             
-            self.log("Training Complete!")
-            self.log(f"Results saved to: {results.save_dir}")
+            # Run training
+            results = model.train(
+                data=data_path, 
+                epochs=epochs, 
+                imgsz=640, 
+                device=device,
+                plots=True,
+                batch=-1, # Auto-batch to maximize memory usage specifically for 4000 images
+                save=True
+            )
+            
+            self.log("✅ Training Complete!")
+            self.log(f"💾 Model saved to: {results.save_dir}")
             
         except Exception as e:
-            self.log(f"CRITICAL ERROR: {str(e)}")
+            self.log(f"❌ CRITICAL ERROR: {str(e)}")
+            self.log("Tip: If Out Of Memory (OOM), close other apps or reduce batch size.")
         
         self.training_active = False
         self.train_btn.configure(text="START REAL TRAINING", state="normal", fg_color="#004400")

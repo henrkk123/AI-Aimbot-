@@ -57,3 +57,10 @@ runs/
 # Usually we ignore large binary blobs, but for this small app maybe keeps it?
 # Let's ignore yolov8n.pt to keep repo clean, auto-download handles it.
 yolov8n.pt
+
+# Node / Web
+node_modules/
+overlay-ui/node_modules/
+overlay-ui/dist/
+npm-debug.log
+yarn-error.log

@@ -5,24 +5,58 @@ import cv2
 import threading
 
 class VisionEngine:
-    def __init__(self, model_path='yolov8n.pt'):
+    def __init__(self, model_path='yolov8n.pt', roi_size=640):
         """
-        Initializes the YOLOv8 model and screen capture.
+        Initializes the YOLOv8 model and screen capture with GPU acceleration.
+        roi_size: Size of the square box to capture at the center of the screen.
         """
-        print(f"Loading YOLO model: {model_path}...")
+        self.roi_size = roi_size
+        
+        # 1. Hardware Acceleration Selection
+        import torch
+        self.device = 'cpu'
+        if torch.cuda.is_available():
+            self.device = 0 # GPU 0
+            device_name = torch.cuda.get_device_name(0)
+            print(f"🚀 FITTING: NVIDIA GPU DETECTED [{device_name}] - ENABLED")
+        elif torch.backends.mps.is_available():
+            self.device = 'mps'
+            print("🚀 FITTING: APPLE SILICON GPU (MPS) - ENABLED")
+        else:
+            print("⚠️ WARNING: NO GPU DETECTED. RUNNING ON CPU (MAY BE SLOW).")
+
+        print(f"Loading YOLO model: {model_path} to {self.device}...")
         self.model = YOLO(model_path)
+        
+        # Force model to device immediately
+        self.model.to(self.device)
+
         self.sct = mss.mss()
-        self.monitor = self.sct.monitors[1] # Primary monitor
+        
+        # Setup ROI (Region of Interest) - Center Crop
+        monitor = self.sct.monitors[1] # Primary monitor
+        screen_w = monitor["width"]
+        screen_h = monitor["height"]
+        
+        self.roi_left = monitor["left"] + (screen_w - roi_size) // 2
+        self.roi_top = monitor["top"] + (screen_h - roi_size) // 2
+        
+        self.capture_area = {
+            "top": self.roi_top,
+            "left": self.roi_left,
+            "width": roi_size,
+            "height": roi_size
+        }
+        
+        print(f"🎯 Vision ROI Set: {roi_size}x{roi_size} at ({self.roi_left}, {self.roi_top})")
         self.lock = threading.Lock()
         
     def capture_screen(self):
         """
-        Captures the screen and converts it to a format YOLO likes (BGR/RGB).
+        Captures the defined ROI.
         """
-        # Capture strictly the monitor area
-        # MSS returns BGRA, OpenCV needs BGR for default behavior, 
-        # but YOLO can handle multiple formats. We'll stick to BGR for consistency if we use cv2.
-        screenshot = self.sct.grab(self.monitor)
+        # Capture strictly the ROI
+        screenshot = self.sct.grab(self.capture_area)
         
         # Convert to numpy array
         img = np.array(screenshot)
@@ -34,14 +68,17 @@ class VisionEngine:
 
     def detect_screen(self, conf_threshold=0.5):
         """
-        Captures screen and runs inference. 
-        Returns tuple: (x, y, w, h) of the BEST detection (highest confidence), or None.
+        Captures screen ROI and runs inference. 
+        Returns tuple: (x, y, w, h, conf) in GLOBAL coordinates.
         """
         frame = self.capture_screen()
         
-        # Run inference
-        # stream=True is faster but returns a generator
-        results = self.model(frame, stream=True, verbose=False, conf=conf_threshold)
+        # Run inference on the specific device
+        # 'half=True' uses FP16 precision (faster on GPU)
+        # 'verbose=False' keeps terminal clean
+        results = self.model(frame, stream=True, verbose=False, conf=conf_threshold, device=self.device)
+        # Note: half=True is automatic on many recent YOLO versions when on GPU, 
+        # but we let ultralytics handle the defaults for stability unless explicit speedup is needed.
         
         best_box = None
         max_conf = 0.0
@@ -52,17 +89,18 @@ class VisionEngine:
                 confidence = float(box.conf[0])
                 if confidence > max_conf:
                     max_conf = confidence
-                    # Box format: xywh (center_x, center_y, width, height) is standard YOLO, 
-                    # but check if we get xyxy. r.boxes.xywh returns center_x, center_y, w, h.
-                    # We usually want top-left x,y for drawing.
-                    # Let's get xyxy -> top-left x, y, bottom-right x, y
                     x1, y1, x2, y2 = box.xyxy[0]
                     
-                    x = int(x1)
-                    y = int(y1)
-                    w = int(x2 - x1)
-                    h = int(y2 - y1)
+                    # Offset local ROI coordinates to Global Screen coordinates
+                    global_x1 = int(x1) + self.roi_left
+                    global_y1 = int(y1) + self.roi_top
+                    global_x2 = int(x2) + self.roi_left
+                    global_y2 = int(y2) + self.roi_top
                     
-                    best_box = (x, y, w, h, confidence)
+                    w = global_x2 - global_x1
+                    h = global_y2 - global_y1
+                    
+                    # Returns top-left x,y for drawing
+                    best_box = (global_x1, global_y1, w, h, confidence)
                     
         return best_box
