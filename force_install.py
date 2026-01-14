@@ -51,13 +51,11 @@ def check_python_version():
     print(f"👉 PYTHON VERSION: {sys.version.split()[0]}")
     
     # 3.11 or 3.12 is the current sweet spot for the latest AI libraries.
-    # 3.10 is becoming too old for some new packages.
-    # 3.13 is still too experimental for binary wheels.
     if major != 3 or minor < 11 or minor > 12:
         print("\n" + "!"*50)
         print("❌ CRITICAL ERROR: INCOMPATIBLE PYTHON VERSION!")
         print(f"   You are using Python {major}.{minor}.")
-        print("   The latest AI Core (v0.5.7) requires Python 3.11 or 3.12.")
+        print("   The latest AI Core (v0.6.2) requires Python 3.11 or 3.12.")
         print("\n   PLEASE DO THIS:")
         print("   1. Uninstall your current Python.")
         print("   2. Install Python 3.11.9 (The New Standard).")
@@ -90,9 +88,11 @@ run_cmd(f"{py_pip} cache purge")
 
 # 2. Install
 print("\nStep 2: INSTALLING COMPATIBLE AI CORE (CUDA 12.8)")
+# Ensure Blackwell support is flagged
 os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
-# We explicitly list all libs to ensure nothing is missed
-install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam customtkinter pynput mss opencv-python triton --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
+
+# Install main libraries
+install_cmd = f"{py_pip} install --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python triton --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
 run_cmd(install_cmd)
 
 # 3. Verify
@@ -102,15 +102,18 @@ try:
     import customtkinter
     import ultralytics
     print("✅ ALL LIBRARIES DETECTED.")
+    
     if check_gpu():
         cap = torch.cuda.get_device_capability(0)
         if cap[0] >= 10:
             print("🚀 BLACKWELL (RTX 50) ARCHITECTURE ACTIVE!")
         print("\n✅ INSTALLATION SUCCESSFUL!")
+    else:
+        print("\n⚠️  GPU NOT DETECTED. The app will run on CPU.")
 except Exception as e:
     print(f"\n❌ VERIFICATION FAILED: {e}")
     print("   Something went wrong during the library installation.")
     print("   1. Ensure your NVIDIA Driver is 570+ (RTX 50-Series requirement).")
-    print("   2. Try running 'UPDATE.bat' again as Administrator.")
+    print("   2. Try running \"UPDATE.bat\" again as Administrator.")
 
 input("\n[ALL DONE] Press Enter to finish...")
