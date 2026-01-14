@@ -10,7 +10,31 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "electron": "cross-env NODE_ENV=development electron .",
-    "dev:all": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\""
+    "dev:all": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.fortniteaib.overlay",
+    "productName": "CV Overlay Pro",
+    "mac": {
+      "category": "public.app-category.games",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
   },
   "dependencies": {
     "framer-motion": "^12.26.2",
@@ -26,6 +50,7 @@
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^39.2.7",
+    "electron-builder": "^26.4.0",
     "electron-is-dev": "^3.0.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",

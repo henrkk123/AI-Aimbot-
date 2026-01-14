@@ -27,14 +27,13 @@ check_cmd "npm"
 
 # Auto-Heal: Python
 if [ ! -d ".venv" ]; then
-    echo "⚠️  First time run? Initializing Python Brain..."
+    echo "⚠️  Initializing Python Brain..."
     python -m venv .venv
-    source .venv/bin/activate
-    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
-else
-    echo "✅ Found Virtual Environment (.venv)"
-    source .venv/bin/activate
 fi
+
+source .venv/bin/activate
+# Force check requirements every time to ensure updates (like customtkinter) are applied
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
 
 # Auto-Heal: UI
 if [ ! -d "overlay-ui/node_modules" ]; then
