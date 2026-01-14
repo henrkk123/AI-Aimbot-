@@ -14,6 +14,7 @@ interface Detection {
 function App() {
   const [target, setTarget] = useState<Detection | null>(null)
   const [connected, setConnected] = useState(false)
+  const [combatMode, setCombatMode] = useState(false)
 
   useEffect(() => {
     // Connect to Python Backend
@@ -35,6 +36,9 @@ function App() {
         try {
           const data = JSON.parse(event.data)
           // data format: { detected: boolean, x, y, w, h, conf }
+          // Sync Combat State
+          if (data.combat_enabled !== undefined) setCombatMode(data.combat_enabled)
+
           if (data.detected) {
             setTarget(data)
           } else {
@@ -91,6 +95,20 @@ function App() {
           letterSpacing: '0.5px'
         }}>
           {connected ? 'VISION ENGINE: ONLINE' : 'SEARCHING FOR ENGINE...'}
+        </span>
+
+        {/* Divider */}
+        <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.2)' }} />
+
+        {/* Combat Status */}
+        <span style={{
+          fontFamily: '"SF Pro Display", "Inter", sans-serif',
+          color: combatMode ? '#ff0055' : 'rgba(255, 255, 255, 0.5)',
+          fontSize: '14px',
+          fontWeight: 600,
+          letterSpacing: '0.5px'
+        }}>
+          {combatMode ? 'COMBAT: ON' : 'COMBAT: OFF'}
         </span>
       </div>
 
