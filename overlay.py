@@ -329,9 +329,8 @@ class OverlayApp(ctk.CTk):
         self.canvas.create_line(cx, cy + 10, cx, cy + 30, fill=color, width=1)
 
     def draw_diagnostics(self):
-        """Draws real-time engine statistics (NO SIMULATION)"""
+        """Draws ultra-clean premium diagnostics."""
         import time
-        scx, scy = self.screen_width/2, self.screen_height/2
         
         # Calculate FPS
         now = time.time()
@@ -342,34 +341,27 @@ class OverlayApp(ctk.CTk):
         if len(self.fps_list) > 20: self.fps_list.pop(0)
         avg_fps = sum(self.fps_list) / len(self.fps_list)
 
-        # Performance Stats (Top Right)
-        panel_x = self.screen_width - 250
-        panel_y = 50
+        # Minimalist Top Bar (Top Right)
+        panel_x = self.screen_width - 20
+        panel_y = 30
         
-        # Draw subtle panel background
-        self.canvas.create_rectangle(panel_x - 10, panel_y - 10, panel_x + 220, panel_y + 160, 
-                                     fill="#000000", outline="#00ff00", stipple="gray50")
-
-        self.canvas.create_text(panel_x, panel_y, text="AXION DIAGNOSTICS", fill="#00ff00", anchor="nw", font=("Orbitron", 10, "bold"))
-        self.canvas.create_text(panel_x, panel_y + 20, text=f"• STATUS: {self.engine_status}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
+        status_color = "#00ff00"
+        if "ERROR" in self.engine_status: status_color = "#ff0000"
         
+        diag_text = f"AXION CORE: {self.engine_status}  |  {avg_fps:.0f} FPS"
         if self.use_vision:
-            device = "RTX Blackwell" if "NVIDIA" in str(self.vision.device) else "CPU/CoreML"
-            self.canvas.create_text(panel_x, panel_y + 35, text=f"• CORE DEVICE: {device}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
-            self.canvas.create_text(panel_x, panel_y + 50, text=f"• ENGINE FPS: {avg_fps:.1f}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
-            self.canvas.create_text(panel_x, panel_y + 65, text=f"• LATENCY: {self.vision.last_inference_time*1000:.1f}ms", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
-        else:
-            self.canvas.create_text(panel_x, panel_y + 35, text="❌ VISION CORE INACTIVE", fill="#ff0000", anchor="nw", font=("Orbitron", 8))
+            diag_text += f"  |  {self.vision.last_inference_time*1000:.1f}ms"
+            
+        # Draw elegant shadow-less text for premium feel
+        self.canvas.create_text(panel_x, panel_y, text=diag_text, fill=status_color, anchor="ne", font=("Orbitron", 10))
 
-        # Check for Training Progress (if file exists)
+        # Check for Training Progress (Hidden by default unless active)
         if os.path.exists("training_progress.json"):
             try:
                 with open("training_progress.json", "r") as f:
                     p = json.load(f)
-                    self.canvas.create_text(panel_x, panel_y + 90, text="NEURAL TRAINING ACTIVE", fill="#00ff00", anchor="nw", font=("Orbitron", 10, "bold"))
-                    self.canvas.create_text(panel_x, panel_y + 110, text=f"• EPOCH: {p.get('epoch', '?')}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
-                    self.canvas.create_text(panel_x, panel_y + 125, text=f"• mAP50: {p.get('map50', 0):.3f}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
-                    self.canvas.create_text(panel_x, panel_y + 140, text=f"• LOSS: {p.get('loss', 0):.4f}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
+                    progress_text = f"NEURAL TRAINING: EPOCH {p.get('epoch', '?')}  |  LOSS: {p.get('loss', 0):.4f}"
+                    self.canvas.create_text(panel_x, panel_y + 25, text=progress_text, fill="#00ff00", anchor="ne", font=("Orbitron", 9))
             except:
                 pass
 
@@ -430,21 +422,20 @@ class OverlayApp(ctk.CTk):
             cy += int(box_h * self.target_offset.get())
             
             self.draw_bracket(x, y, box_w, box_h, length=min(box_w, box_h)//4, color="#00ff00")
-            self.draw_hud_elements(cx, cy)
+            
+            # --- MINIMALIST TARGET LABELS ---
+            label_x = x + box_w + 8
+            self.canvas.create_text(label_x, y, text=f"TARGET // {confidence:.0%}", fill="#00ff00", anchor="nw", font=("Orbitron", 9, "bold"))
+            self.canvas.create_text(label_x, y + 15, text=f"{self.vision.last_inference_time*1000:.1f}ms", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
             
             # --- HUD UPDATES ---
             # Current Point (Target)
-            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#00ff00", outline="#004400", width=1)
+            self.canvas.create_oval(cx - 3, cy - 3, cx + 3, cy + 3, fill="#00ff00", outline="#004400", width=1)
             
             # Prediction Path (Ghost)
             if self.prediction_factor.get() > 0:
-                self.canvas.create_line(cx, cy, px, py, fill="#00ff00", dash=(2, 2))
-                self.canvas.create_oval(px - 3, py - 3, px + 3, py + 3, outline="#00ff00", width=2)
-                self.canvas.create_text(px + 5, py + 5, text="PRED", fill="#00ff00", font=("Orbitron", 8))
-
-            self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ff00", anchor="nw", font=("Orbitron", 12, "bold"))
-            self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ff00", anchor="nw", font=("Orbitron", 10))
-            self.canvas.create_text(x + box_w + 10, y + 35, text=f"LAT: {self.vision.last_inference_time*1000:.1f}ms", fill="#00ff00", anchor="nw", font=("Orbitron", 9))
+                self.canvas.create_line(cx, cy, px, py, fill="#00ff00", dash=(2, 2), width=1)
+                self.canvas.create_oval(px - 2, py - 2, px + 2, py + 2, outline="#00ff00", width=1)
 
             # Combat Logic
             if self.mouse_control_var.get():
@@ -462,7 +453,7 @@ class OverlayApp(ctk.CTk):
                         smooth = self.magnet_smooth.get()
                     
                     move_mouse_to(aim_x, aim_y, smooth_factor=smooth, humanization=self.humanization.get())
-                    self.canvas.create_text(scx, 50, text="MAGNETIC LOCK ENGAGED", fill="#00ff00", font=("Orbitron", 24, "bold"))
+                    self.canvas.create_text(scx, 50, text="CORE // MAGNETIC LOCK ACTIVE", fill="#00ff00", font=("Orbitron", 14, "bold"))
                 except Exception as e: print(f"Mouse Error: {e}")
         
         self.after(10, self.update_overlay)

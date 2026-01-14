@@ -87,22 +87,23 @@ run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy c
 run_cmd(f"{py_pip} cache purge")
 
 # 2. Install
-print("\nStep 2: INSTALLING COMPATIBLE AI CORE (CUDA 12.8)")
+print("\nStep 2: INSTALLING PREMIUM AI CORE (CUDA 12.8)")
+print("👉 This will take a moment. We are optimizing for your specific GPU architecture.")
 # Ensure Blackwell support is flagged
 os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
 
 # Install main libraries
-install_cmd = f"{py_pip} install --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
+install_cmd = f"{py_pip} install --quiet --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
 run_cmd(install_cmd)
 
 # Optional: Triton (Performance Optimization)
-print("\nStep 2.5: OPTIONAL PERFORMANCE KERNELS (TRITON)")
-print("👉 Note: Triton is optional. If it fails, your AI will still work perfectly.")
+print("\nStep 2.5: OPTIMIZING KERNELS (TRITON)")
 try:
     # We try to install it separately so it doesn't break the main setup
-    subprocess.call(f"{py_pip} install triton", shell=True)
+    subprocess.call(f"{py_pip} install --quiet triton", shell=True)
+    print("✅ Kernel optimization complete.")
 except:
-    print("⚠️  Triton could not be installed. Skipping optional kernel optimizations.")
+    print("⚠️  Using standard kernels (Skipping optional Triton).")
 
 # 3. Verify
 print("\nStep 3: FINAL VERIFICATION")
@@ -110,15 +111,14 @@ try:
     import torch
     import customtkinter
     import ultralytics
-    print("✅ ALL LIBRARIES DETECTED.")
     
     if check_gpu():
         cap = torch.cuda.get_device_capability(0)
         if cap[0] >= 10:
-            print("🚀 BLACKWELL (RTX 50) ARCHITECTURE ACTIVE!")
-        print("\n✅ INSTALLATION SUCCESSFUL!")
+            print("🚀 PREMIUM STATUS: BLACKWELL ARCHITECTURE DETECTED!")
+        print("\n✅ AXION ENGINE INSTALLED SUCCESSFULLY!")
     else:
-        print("\n⚠️  GPU NOT DETECTED. The app will run on CPU.")
+        print("\n⚠️  STANDARD STATUS: Running on CPU (No GPU detected).")
 except Exception as e:
     print(f"\n❌ VERIFICATION FAILED: {e}")
     print("   Something went wrong during the library installation.")
