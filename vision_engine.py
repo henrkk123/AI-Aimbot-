@@ -69,7 +69,7 @@ class VisionEngine:
         
         return img
 
-    def detect_screen(self, conf_threshold=0.30): # Lowered base threshold to catch fast movers
+    def detect_screen(self, conf_threshold=0.50): # Raised to 0.50 to reduce false positives
         """
         Captures screen ROI and runs inference. 
         Returns tuple: (x, y, w, h, conf) in GLOBAL coordinates.
@@ -125,8 +125,8 @@ class VisionEngine:
                 if self.last_target_center:
                     lcx, lcy = self.last_target_center
                     dist = np.hypot(cx - lcx, cy - lcy)
-                    if dist < 100: # 100px Sticky Radius
-                        score += 0.3 # BIG BONUS to keep lock
+                    if dist < 250: # 250px Sticky Radius (Huge increase for fast movement)
+                        score += 0.5 # MASSIVE BONUS to keep lock
                 
                 if score > max_score:
                     max_score = score
