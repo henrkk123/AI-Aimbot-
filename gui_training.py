@@ -80,6 +80,14 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.selected_path_label.pack(pady=(0, 20))
         
         self.yaml_path = None
+        self.base_model_path = 'yolov8n.pt' # Default to new training
+        
+        # Base Model Selection
+        self.model_btn = ctk.CTkButton(self.left_panel, text="Select Base Model (Optional)", 
+                                       command=self.select_base_model, fg_color="#444", border_color="#666", border_width=1)
+        self.model_btn.pack(pady=10, padx=20, fill="x")
+        self.model_label = ctk.CTkLabel(self.left_panel, text="Base: yolov8n.pt (Fresh)", text_color="gray", font=("Arial", 10))
+        self.model_label.pack(pady=(0, 10))
         
         # Params
         self.epochs_entry = ctk.CTkEntry(self.left_panel, placeholder_text="Epochs")
@@ -90,6 +98,11 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         
         reco_text = "Recommended: 100+ (RTX Detected)" if getattr(self, "is_gpu", False) else "Recommended: 50 (CPU/MPS)"
         ctk.CTkLabel(self.left_panel, text=reco_text, text_color="gray", font=("Arial", 10)).pack(pady=(0, 10))
+        
+        # Device Force
+        self.device_var = ctk.StringVar(value="Auto")
+        self.device_menu = ctk.CTkOptionMenu(self.left_panel, values=["Auto", "GPU (0)", "CPU"], variable=self.device_var)
+        self.device_menu.pack(pady=10, padx=20, fill="x")
         
         # Right: Output
         self.right_panel = ctk.CTkFrame(self.grid_frame, fg_color="#1a1a1a", corner_radius=10, border_width=1, border_color="#333")
@@ -137,6 +150,14 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 self.log(f"❌ Error creating yaml: {e}")
                 self.yaml_path = None
 
+    def select_base_model(self):
+        path = filedialog.askopenfilename(filetypes=[("YOLO Model", "*.pt")])
+        if path:
+            self.base_model_path = path
+            self.model_label.configure(text=f"Base: {os.path.basename(path)} (Fine-Tuning)")
+            self.log(f"🧠 Base Model set to: {os.path.basename(path)}")
+            self.log("   -> New dataset will refine this model (Transfer Learning).")
+
     def validate_dataset(self, path):
         """Checks if the folder actually contains images and labels."""
         images = [f for f in os.listdir(path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp'))]
@@ -177,23 +198,32 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
             pass
             
         # Start in thread
-        t = threading.Thread(target=self.run_yolo_train, args=(self.yaml_path, epochs))
+        # Start in thread
+        selected_device = self.device_var.get()
+        t = threading.Thread(target=self.run_yolo_train, args=(self.yaml_path, epochs, self.base_model_path, selected_device))
         t.start()
 
-    def run_yolo_train(self, data_path, epochs):
-        self.log(f"🚀 Initializing YOLOv8n Training ({epochs} epochs)...")
+    def run_yolo_train(self, data_path, epochs, base_model, device_mode):
+        self.log(f"🚀 Initializing Training ({epochs} epochs)...")
+        self.log(f"🧠 Base Model: {os.path.basename(base_model)}")
         self.log("Note: Results will be saved to the 'runs' folder.")
         
         try:
             # Check for GPU
             import torch
-            device = '0' if torch.cuda.is_available() else 'cpu'
-            if torch.backends.mps.is_available():
-                device = 'mps'
+            device = 'cpu'
             
-            self.log(f"💻 Training Device: {device.upper()}")
+            if device_mode == "GPU (0)":
+                 device = '0'
+            elif device_mode == "CPU":
+                 device = 'cpu'
+            else: # Auto
+                if torch.cuda.is_available(): device = '0'
+                elif torch.backends.mps.is_available(): device = 'mps'
             
-            model = YOLO('yolov8n.pt')
+            self.log(f"💻 Compute Device: {str(device).upper()}")
+            
+            model = YOLO(base_model) # Load selected model
             
             self.log("Starting training process... (Check terminal for detailed progress)")
             
