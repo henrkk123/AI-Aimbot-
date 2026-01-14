@@ -19,9 +19,9 @@ pip cache purge
 pip uninstall -y torch torchvision torchaudio numpy
 
 echo.
-echo 2. Installing CUDA 11.8 (Force Version 2.1.2)...
-:: Explicitly forcing the +cu118 wheel to prevent CPU fallback
-pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118
+echo 2. Installing PREVIEW Version (RTX 50-Series Support)...
+:: RTX 5070 (SM_120) requires PyTorch Nightly + CUDA 12.6
+pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
 
 echo.
 echo ==================================================
