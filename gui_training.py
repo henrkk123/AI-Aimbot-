@@ -31,6 +31,31 @@ class TrainingWindow(ctk.CTkToplevel):
         
         self.ds_label = ctk.CTkLabel(self.left_panel, text="Configuration", font=("Arial", 14, "bold"), text_color="white")
         self.ds_label.pack(pady=(15, 10))
+
+        # Initial Environment Check
+        self.check_environment()
+        
+    def check_environment(self):
+        """Auto-detects GPU and libraries."""
+        try:
+            import torch
+            import ultralytics
+            try:
+                 # Attempt to load a small model to verify
+                pass
+            except:
+                pass
+                
+            device = "CPU"
+            if torch.cuda.is_available():
+                device = f"NVIDIA GPU ({torch.cuda.get_device_name(0)})"
+            elif torch.backends.mps.is_available():
+                device = "APPLE SILICON (MPS)"
+                
+            print(f"✅ Environment OK. Device: {device}")
+            # We can't update UI here easily as it's init, but print is good.
+        except ImportError as e:
+            print(f"❌ CRITICAL MISSING LIB: {e}")
         
         # Dataset Selection
         self.select_ds_btn = ctk.CTkButton(self.left_panel, text="Select Image Folder", 
