@@ -39,7 +39,7 @@ if not exist "overlay-ui\node_modules\" (
         echo [1/2] Creating Python Brain...
         python -m venv .venv
         call .venv\Scripts\activate.bat
-        pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+        pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
     )
 
     :: Node Setup

@@ -29,7 +29,7 @@ if not exist .venv (
 )
 call .venv\Scripts\activate.bat
 echo Installing Python libs...
-pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
 
 :: 3. Setup Node
 echo.

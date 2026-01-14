@@ -30,7 +30,7 @@ if [ ! -d ".venv" ]; then
     echo "⚠️  First time run? Initializing Python Brain..."
     python -m venv .venv
     source .venv/bin/activate
-    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
 else
     echo "✅ Found Virtual Environment (.venv)"
     source .venv/bin/activate
