@@ -74,14 +74,30 @@ class OverlayApp(ctk.CTk):
         self.bind("<Escape>", lambda e: self.destroy())
         
         # --- UI CONTROLS ---
+        # HUD State
+        self.hud_minimized = False
+        
         # Floating Control Panel (Top Left)
         self.control_frame = ctk.CTkFrame(self, fg_color="#0a0a0a", corner_radius=15, border_width=2, border_color="#00ffff")
         self.control_frame.place(relx=0.02, rely=0.05, anchor="nw")
         
-        self.title_label = ctk.CTkLabel(self.control_frame, text="NEURAL EDGE v3.5", text_color="#00ffff", font=("Orbitron", 14, "bold"))
-        self.title_label.pack(padx=15, pady=(15, 5))
+        # Title & Minimize Button HP
+        self.header_frame = ctk.CTkFrame(self.control_frame, fg_color="transparent")
+        self.header_frame.pack(fill="x", padx=10, pady=(10, 0))
+
+        self.title_label = ctk.CTkLabel(self.header_frame, text="NEURAL EDGE v3.5", text_color="#00ffff", font=("Orbitron", 14, "bold"))
+        self.title_label.pack(side="left", padx=5)
         
-        self.switch_frame = ctk.CTkFrame(self.control_frame, fg_color="transparent")
+        self.minimize_btn = ctk.CTkButton(self.header_frame, text="_", width=25, height=25,
+                                           fg_color="#1a1a1a", hover_color="#333", text_color="#00ffff",
+                                           command=self.toggle_hud)
+        self.minimize_btn.pack(side="right", padx=5)
+        
+        # Sub-container for hideable elements
+        self.menu_container = ctk.CTkFrame(self.control_frame, fg_color="transparent")
+        self.menu_container.pack(fill="x", padx=5)
+
+        self.switch_frame = ctk.CTkFrame(self.menu_container, fg_color="transparent")
         self.switch_frame.pack(fill="x", padx=10)
 
         # Mouse Control Switch (HOTKEY: 0)
@@ -90,14 +106,14 @@ class OverlayApp(ctk.CTk):
                                           text_color="#ff00ff", font=("Orbitron", 11, "bold"))
         self.mouse_switch.pack(side="left", padx=5, pady=10)
 
-        self.settings_btn = ctk.CTkButton(self.control_frame, text="⚙️ SETTINGS", width=100,
+        self.settings_btn = ctk.CTkButton(self.menu_container, text="⚙️ SETTINGS", width=100,
                                           fg_color="#1a1a1a", hover_color="#2a2a2a", text_color="#00ffff",
                                           command=self.toggle_settings)
         self.settings_btn.pack(padx=15, pady=5)
 
         # Expandable Settings Frame
         self.settings_visible = False
-        self.settings_frame = ctk.CTkFrame(self.control_frame, fg_color="#141414", corner_radius=10)
+        self.settings_frame = ctk.CTkFrame(self.menu_container, fg_color="#141414", corner_radius=10)
         
         # Sliders
         self.create_slider("Smoothing (Long Range)", self.smooth_factor, 0.01, 1.0)
@@ -108,8 +124,12 @@ class OverlayApp(ctk.CTk):
         self.create_slider("Prediction Intensity (Leading)", self.prediction_factor, 0.0, 5.0)
         self.create_slider("Humanization (Stealth)", self.humanization, 0.0, 1.0)
         self.create_slider("Lock Stability (Priority)", self.lock_stability, 0.0, 1.0)
+        
+        # v0.5.0: Mask Sliders
+        self.create_slider("Smart Mask Width", self.mask_width, 0.0, 0.5)
+        self.create_slider("Smart Mask Height", self.mask_height, 0.0, 0.8)
 
-        self.train_ui_btn = ctk.CTkButton(self.control_frame, text="NEURAL TRAINING", command=self.open_training_ui,
+        self.train_ui_btn = ctk.CTkButton(self.menu_container, text="NEURAL TRAINING", command=self.open_training_ui,
                                           fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
         self.train_ui_btn.pack(padx=15, pady=(10, 15))
         
@@ -177,6 +197,8 @@ class OverlayApp(ctk.CTk):
         self.prediction_factor = ctk.DoubleVar(value=defaults["prediction_factor"])
         self.humanization = ctk.DoubleVar(value=defaults["humanization"])
         self.lock_stability = ctk.DoubleVar(value=defaults["lock_stability"])
+        self.mask_width = ctk.DoubleVar(value=defaults.get("mask_width", 0.0))    # v0.5.0
+        self.mask_height = ctk.DoubleVar(value=defaults.get("mask_height", 0.0))  # v0.5.0
         self.mouse_control_var = ctk.BooleanVar(value=defaults["combat_mode"])
 
     def save_config(self):
@@ -189,6 +211,8 @@ class OverlayApp(ctk.CTk):
             "prediction_factor": self.prediction_factor.get(),
             "humanization": self.humanization.get(),
             "lock_stability": self.lock_stability.get(),
+            "mask_width": self.mask_width.get(),
+            "mask_height": self.mask_height.get(),
             "combat_mode": self.mouse_control_var.get()
         }
         try:
@@ -208,13 +232,25 @@ class OverlayApp(ctk.CTk):
                 self.vision.conf_threshold = self.conf_threshold.get()
                 self.vision.sticky_radius = self.magnet_radius.get()
                 self.vision.target_offset = self.target_offset.get()
-                self.vision.prediction_factor = self.prediction_factor.get() # Update prediction factor
+                self.vision.prediction_factor = self.prediction_factor.get()
                 self.vision.lock_stability = self.lock_stability.get()
+                self.vision.mask_width = self.mask_width.get()   # v0.5.0
+                self.vision.mask_height = self.mask_height.get() # v0.5.0
             self.save_config() # Save config on slider change
 
         slider = ctk.CTkSlider(self.settings_frame, from_=min_val, to=max_val, variable=variable, command=update_lbl,
                                button_color="#00ffff", progress_color="#00ffff")
         slider.pack(padx=10, pady=(0, 10))
+
+    def toggle_hud(self):
+        if self.hud_minimized:
+            self.menu_container.pack(fill="x", padx=5)
+            self.minimize_btn.configure(text="_")
+            self.hud_minimized = False
+        else:
+            self.menu_container.pack_forget()
+            self.minimize_btn.configure(text="□")
+            self.hud_minimized = True
 
     def toggle_settings(self):
         if self.settings_visible:
@@ -233,7 +269,10 @@ class OverlayApp(ctk.CTk):
                 self.vision.conf_threshold = self.conf_threshold.get()
                 self.vision.sticky_radius = self.magnet_radius.get()
                 self.vision.target_offset = self.target_offset.get()
-                self.vision.prediction_factor = self.prediction_factor.get() # Pass prediction factor
+                self.vision.prediction_factor = self.prediction_factor.get()
+                self.vision.lock_stability = self.lock_stability.get()
+                self.vision.mask_width = self.mask_width.get()   # v0.5.0
+                self.vision.mask_height = self.mask_height.get() # v0.5.0
                 
                 result = self.vision.detect_screen()
                 self.latest_detection = result
@@ -282,6 +321,24 @@ class OverlayApp(ctk.CTk):
         if self.settings_visible:
             r = self.magnet_radius.get()
             self.canvas.create_oval(scx - r, scy - r, scx + r, scy + r, outline="#555555", dash=(4, 4))
+            
+            # --- MASK VISUALIZATION (v0.5.0) ---
+            mw = self.mask_width.get()
+            mh = self.mask_height.get()
+            if mw > 0 or mh > 0:
+                # Calculate mask box (Same logic as vision_engine)
+                roi_size = self.vision.roi_size
+                m_px_w = roi_size * mw
+                m_px_h = roi_size * mh
+                
+                x1 = scx - m_px_w // 2
+                y1 = scy - m_px_h // 2 # Centered for visual feedback
+                x2 = scx + m_px_w // 2
+                y2 = scy + m_px_h // 2
+                
+                # Draw semi-transparent red box for tuning
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill="#ff0000", stipple="gray25", outline="#ff0000")
+                self.canvas.create_text(scx, y1 - 10, text="SELF-MASKING AREA", fill="#ff0000", font=("Orbitron", 8))
             
         x, y, box_w, box_h = 0, 0, 0, 0
         px, py = 0, 0 # Predicted coordinates
