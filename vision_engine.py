@@ -11,6 +11,10 @@ class VisionEngine:
         roi_size: Size of the square box to capture at the center of the screen.
         """
         self.roi_size = roi_size
+        self.conf_threshold = 0.50 
+        self.sticky_radius = 250    
+        self.target_offset = 0.0    # -0.5 (Top) to 0.5 (Bottom)
+
         
         # 1. Hardware Acceleration Selection
         import torch
@@ -31,24 +35,40 @@ class VisionEngine:
         # Force model to device immediately
         self.model.to(self.device)
 
-        self.sct = mss.mss()
-        
-        # Setup ROI (Region of Interest) - Center Crop
-        monitor = self.sct.monitors[1] # Primary monitor
-        screen_w = monitor["width"]
-        screen_h = monitor["height"]
-        
-        self.roi_left = monitor["left"] + (screen_w - roi_size) // 2
-        self.roi_top = monitor["top"] + (screen_h - roi_size) // 2
-        
-        self.capture_area = {
-            "top": self.roi_top,
-            "left": self.roi_left,
-            "width": roi_size,
-            "height": roi_size
-        }
-        
+        # 2. Setup ROI (Region of Interest) - Center Crop
+        import mss
+        with mss.mss() as sct:
+            monitor = sct.monitors[1] # Primary monitor
+            screen_w = monitor["width"]
+            screen_h = monitor["height"]
+            self.roi_left = monitor["left"] + (screen_w - roi_size) // 2
+            self.roi_top = monitor["top"] + (screen_h - roi_size) // 2
+
         print(f"🎯 Vision ROI Set: {roi_size}x{roi_size} at ({self.roi_left}, {self.roi_top})")
+        
+        # 3. Screen Capture Setup (DXCam for Windows, MSS fallback)
+        self.camera = None
+        self.use_dxcam = False
+        if sys.platform == "win32":
+            try:
+                import dxcam
+                self.camera = dxcam.create(region=(self.roi_left, self.roi_top, self.roi_left + roi_size, self.roi_top + roi_size))
+                self.use_dxcam = True
+                print("🚀 VISION: DXCam (DirectX) Capture - ENABLED")
+            except Exception as e:
+                print(f"⚠️ VISION: DXCam failed ({e}), falling back to MSS")
+        
+        if not self.use_dxcam:
+            import mss
+            self.sct = mss.mss()
+            self.capture_area = {
+                "top": self.roi_top,
+                "left": self.roi_left,
+                "width": roi_size,
+                "height": roi_size
+            }
+            print("🕒 VISION: MSS Capture - ENABLED")
+
         self.lock = threading.Lock()
         
         # Tracking Memory for Sticky Logic
@@ -56,24 +76,28 @@ class VisionEngine:
         
     def capture_screen(self):
         """
-        Captures the defined ROI.
+        Captures the defined ROI using the fastest available method.
         """
-        # Capture strictly the ROI
+        if self.use_dxcam:
+            frame = self.camera.grab()
+            if frame is not None:
+                # DXCam returns RGB by default, often as a numpy array
+                return frame
+            # If grab fails, it returns None
+        
+        # Fallback to MSS
         screenshot = self.sct.grab(self.capture_area)
-        
-        # Convert to numpy array
         img = np.array(screenshot)
-        
-        # Drop alpha channel (BGRA -> BGR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
-        
-        return img
+        return cv2.cvtColor(img, cv2.COLOR_BGRA2RGB) # Keep RGB for YOLO
 
-    def detect_screen(self, conf_threshold=0.50): # Raised to 0.50 to reduce false positives
+    def detect_screen(self, conf_threshold=None):
         """
         Captures screen ROI and runs inference. 
         Returns tuple: (x, y, w, h, conf) in GLOBAL coordinates.
         """
+        if conf_threshold is None:
+            conf_threshold = self.conf_threshold
+
         frame = self.capture_screen()
         
         # Run inference on the specific device
@@ -106,6 +130,10 @@ class VisionEngine:
                 cx = global_x1 + w // 2
                 cy = global_y1 + h // 2
                 
+                # Apply Target Offset (Shift Vertical Center)
+                cy += int(h * self.target_offset)
+
+                
                 # --- PLAYER DEADZONE FILTER ---
                 # Fortnite/3rd Person: Player is Bottom Center.
                 # ROI is 640x640. Center is 320,320.
@@ -125,7 +153,7 @@ class VisionEngine:
                 if self.last_target_center:
                     lcx, lcy = self.last_target_center
                     dist = np.hypot(cx - lcx, cy - lcy)
-                    if dist < 250: # 250px Sticky Radius (Huge increase for fast movement)
+                    if dist < self.sticky_radius: # Dynamic Sticky Radius
                         score += 0.5 # MASSIVE BONUS to keep lock
                 
                 if score > max_score:

@@ -6,22 +6,30 @@ import sys
 import platform
 import random
 import threading
+import json
+import os
 
 class OverlayApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # --- CONFIG SETUP ---
+        self.config_path = "config.json"
+        self.load_config()
+
         # --- VISION ENGINE SETUP ---
         try:
             from vision_engine import VisionEngine
             self.vision = VisionEngine() # Load YOLO
+            self.vision.conf_threshold = self.conf_threshold.get()
+            self.vision.sticky_radius = self.magnet_radius.get()
             self.use_vision = True
         except Exception as e:
             print(f"Error loading VisionEngine: {e}")
             self.use_vision = False
 
         # Window setup
-        self.title("Computer Vision Overlay")
+        self.title("Neural Edge Overlay")
         
         # Gets the requested values of the height and width.
         self.screen_width = self.winfo_screenwidth()
@@ -73,16 +81,34 @@ class OverlayApp(ctk.CTk):
         self.title_label = ctk.CTkLabel(self.control_frame, text="NEURAL EDGE v3.5", text_color="#00ffff", font=("Orbitron", 14, "bold"))
         self.title_label.pack(padx=15, pady=(15, 5))
         
-        self.train_ui_btn = ctk.CTkButton(self.control_frame, text="NEURAL TRAINING", command=self.open_training_ui,
-                                          fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
-        self.train_ui_btn.pack(padx=15, pady=5)
-        
+        self.switch_frame = ctk.CTkFrame(self.control_frame, fg_color="transparent")
+        self.switch_frame.pack(fill="x", padx=10)
+
         # Mouse Control Switch (HOTKEY: 0)
-        self.mouse_control_var = ctk.BooleanVar(value=False)
-        self.mouse_switch = ctk.CTkSwitch(self.control_frame, text="MAGNET LOCK [0]", variable=self.mouse_control_var,
+        self.mouse_switch = ctk.CTkSwitch(self.switch_frame, text="MAGNET LOCK [0]", variable=self.mouse_control_var,
                                           progress_color="#ff00ff", button_color="#cc00cc", button_hover_color="#ff55ff",
                                           text_color="#ff00ff", font=("Orbitron", 11, "bold"))
-        self.mouse_switch.pack(padx=15, pady=(5, 15))
+        self.mouse_switch.pack(side="left", padx=5, pady=10)
+
+        self.settings_btn = ctk.CTkButton(self.control_frame, text="⚙️ SETTINGS", width=100,
+                                          fg_color="#1a1a1a", hover_color="#2a2a2a", text_color="#00ffff",
+                                          command=self.toggle_settings)
+        self.settings_btn.pack(padx=15, pady=5)
+
+        # Expandable Settings Frame
+        self.settings_visible = False
+        self.settings_frame = ctk.CTkFrame(self.control_frame, fg_color="#141414", corner_radius=10)
+        
+        # Sliders
+        self.create_slider("Smoothing (Long Range)", self.smooth_factor, 0.01, 1.0)
+        self.create_slider("Magnet Smooth (Snap)", self.magnet_smooth, 0.01, 1.0)
+        self.create_slider("Magnet Radius (px)", self.magnet_radius, 10, 500)
+        self.create_slider("Conf Threshold", self.conf_threshold, 0.1, 1.0)
+        self.create_slider("Target Offset (Head-Chest)", self.target_offset, -0.5, 0.5)
+
+        self.train_ui_btn = ctk.CTkButton(self.control_frame, text="NEURAL TRAINING", command=self.open_training_ui,
+                                          fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
+        self.train_ui_btn.pack(padx=15, pady=(10, 15))
         
         # State
         self.training_window = None
@@ -104,7 +130,7 @@ class OverlayApp(ctk.CTk):
             self.vision_thread = threading.Thread(target=self.vision_loop, daemon=True)
             self.vision_thread.start()
             
-            # Print GPU Info if available (YOLO usually prints this, but let's be explicit)
+            # Print GPU Info
             try:
                 import torch
                 if torch.cuda.is_available():
@@ -119,11 +145,81 @@ class OverlayApp(ctk.CTk):
         # Start the update loop (UI)
         self.update_overlay()
 
+    def load_config(self):
+        # Default values
+        defaults = {
+            "smooth_factor": 0.3,
+            "magnet_smooth": 0.8,
+            "magnet_radius": 50,
+            "conf_threshold": 0.5,
+            "target_offset": -0.2, # Default slightly above center (Chest/Neck)
+            "combat_mode": False
+        }
+        
+        if os.path.exists(self.config_path):
+            try:
+                with open(self.config_path, 'r') as f:
+                    data = json.load(f)
+                    defaults.update(data)
+            except: pass
+
+        self.smooth_factor = ctk.DoubleVar(value=defaults["smooth_factor"])
+        self.magnet_smooth = ctk.DoubleVar(value=defaults["magnet_smooth"])
+        self.magnet_radius = ctk.DoubleVar(value=defaults["magnet_radius"])
+        self.conf_threshold = ctk.DoubleVar(value=defaults["conf_threshold"])
+        self.target_offset = ctk.DoubleVar(value=defaults["target_offset"])
+        self.mouse_control_var = ctk.BooleanVar(value=defaults["combat_mode"])
+
+    def save_config(self):
+        data = {
+            "smooth_factor": self.smooth_factor.get(),
+            "magnet_smooth": self.magnet_smooth.get(),
+            "magnet_radius": self.magnet_radius.get(),
+            "conf_threshold": self.conf_threshold.get(),
+            "target_offset": self.target_offset.get(),
+            "combat_mode": self.mouse_control_var.get()
+        }
+        try:
+            with open(self.config_path, 'w') as f:
+                json.dump(data, f, indent=4) # Added indent for readability
+        except Exception as e:
+            print(f"Error saving config: {e}")
+
+    def create_slider(self, label_text, variable, min_val, max_val):
+        lbl = ctk.CTkLabel(self.settings_frame, text=f"{label_text}: {variable.get():.2f}", text_color="#aaa", font=("Arial", 10))
+        lbl.pack(padx=10, pady=(5, 0))
+        
+        def update_lbl(val):
+            lbl.configure(text=f"{label_text}: {float(val):.2f}")
+            if self.use_vision:
+                # Update vision engine parameters immediately
+                self.vision.conf_threshold = self.conf_threshold.get()
+                self.vision.sticky_radius = self.magnet_radius.get()
+                self.vision.target_offset = self.target_offset.get()
+            self.save_config() # Save config on slider change
+
+        slider = ctk.CTkSlider(self.settings_frame, from_=min_val, to=max_val, variable=variable, command=update_lbl,
+                               button_color="#00ffff", progress_color="#00ffff")
+        slider.pack(padx=10, pady=(0, 10))
+
+    def toggle_settings(self):
+        if self.settings_visible:
+            self.settings_frame.pack_forget()
+            self.settings_visible = False
+        else:
+            self.settings_frame.pack(after=self.settings_btn, fill="x", padx=10, pady=5)
+            self.settings_visible = True
+
     def vision_loop(self):
         """Runs inference as fast as possible in background."""
         while self.vision_thread_running:
             try:
-                # This blocks only as long as inference takes
+                # Update params before detection
+                # These are already updated by slider command, but good to ensure latest values
+                self.vision.conf_threshold = self.conf_threshold.get()
+                self.vision.sticky_radius = self.magnet_radius.get()
+                self.vision.target_offset = self.target_offset.get()
+                
                 result = self.vision.detect_screen()
                 self.latest_detection = result
             except Exception as e:
@@ -131,33 +227,27 @@ class OverlayApp(ctk.CTk):
 
     def open_training_ui(self):
         if self.training_window is None or not self.training_window.winfo_exists():
-            self.training_window = TrainingWindow(self)
+            self.training_window = TrainingWindow()
+            self.training_window.focus()
         else:
             self.training_window.focus()
 
     def draw_bracket(self, x, y, w, h, length=20, color="#00ffff", thickness=2):
         """Draws sci-fi corner brackets with NEON GLOW."""
-        # GLOW LAYER (Slightly wider, dimmer)
         glow_color = "#006666"
         gt = thickness + 2
-        
         for c, t in [(glow_color, gt), (color, thickness)]:
-            # Top Left
             self.canvas.create_line(x, y, x + length, y, fill=c, width=t)
             self.canvas.create_line(x, y, x, y + length, fill=c, width=t)
-            # Top Right
             self.canvas.create_line(x + w, y, x + w - length, y, fill=c, width=t)
             self.canvas.create_line(x + w, y, x + w, y + length, fill=c, width=t)
-            # Bottom Left
             self.canvas.create_line(x, y + h, x + length, y + h, fill=c, width=t)
             self.canvas.create_line(x, y + h, x, y + h - length, fill=c, width=t)
-            # Bottom Right
             self.canvas.create_line(x + w, y + h, x + w - length, y + h, fill=c, width=t)
             self.canvas.create_line(x + w, y + h, x + w, y + h - length, fill=c, width=t)
 
     def draw_hud_elements(self, cx, cy):
         """Draws decorative HUD lines"""
-        # Crosshair lines (Cyan)
         color = "#00ffff"
         self.canvas.create_line(cx - 30, cy, cx - 10, cy, fill=color, width=1)
         self.canvas.create_line(cx + 10, cy, cx + 30, cy, fill=color, width=1)
@@ -165,85 +255,74 @@ class OverlayApp(ctk.CTk):
         self.canvas.create_line(cx, cy + 10, cx, cy + 30, fill=color, width=1)
 
     def update_overlay(self):
-        """
-        Main loop to update the visualization.
-        """
-        # Clear previous drawings
+        """Main loop to update the visualization."""
         self.canvas.delete("all")
 
+        # Static Crosshair
+        scx, scy = self.screen_width/2, self.screen_height/2
+        self.canvas.create_line(scx-5, scy, scx+5, scy, fill="#00ffff", width=1)
+        self.canvas.create_line(scx, scy-5, scx, scy+5, fill="#00ffff", width=1)
+
+        # Show Magnet Radius while tuning
+        if self.settings_visible:
+            r = self.magnet_radius.get()
+            self.canvas.create_oval(scx - r, scy - r, scx + r, scy + r, outline="#555555", dash=(4, 4))
+            
         x, y, box_w, box_h = 0, 0, 0, 0
         detected = False
         confidence = 0.0
 
         if self.use_vision:
-            # 1. READ latest result from thread (Instant, no waiting)
             target = self.latest_detection
             if target:
                 x, y, box_w, box_h, confidence = target
                 detected = True
         else:
             # Fallback to simulation
-            w = self.winfo_width()
-            h = self.winfo_height()
-            if w < 100: w = self.screen_width
-            if h < 100: h = self.screen_height
-            x, y, box_w, box_h = generate_dummy_data(w, h)
+            w, h = 640, 640 # Dummy ROI
+            x, y, box_w, box_h = generate_dummy_data(self.screen_width, self.screen_height)
             detected = True
             confidence = random.uniform(0.8, 0.99)
 
         if detected:
-            # 2. Math: Calculate Centroid
             cx, cy = calculate_centroid(x, y, box_w, box_h)
+            # VISUAL REFINE: Apply vertical offset to the HUD circle too
+            cy += int(box_h * self.target_offset.get())
             
-            # 3. Visualization (Sci-Fi Style)
-            # HUD Brackets
-            self.draw_bracket(x, y, box_w, box_h, length=min(box_w, box_h)//4, color="#00ff00")
-            
-            # Center target
+            self.draw_bracket(x, y, box_w, box_h, length=min(box_w, box_h)//4, color="#00ffff")
             self.draw_hud_elements(cx, cy)
             self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ff00ff", outline="#00ffff", width=2)
             
-            # Text Info
             self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ffff", anchor="nw", font=("Orbitron", 12, "bold"))
             self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
-            self.canvas.create_text(x + box_w + 10, y + 35, text=f"CORE: NIGHTLY", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
 
-            # 4. Combat Logic (Mouse Control / Aim Assist Only)
-        if self.mouse_control_var.get():
-            try:
-                from mouse_control import move_mouse_to
-                # Aimbot - Dynamic Magnet Logic
-                # Calculate distance to center
-                import math
-                dist = math.hypot(cx - self.screen_width/2, cy - self.screen_height/2)
-                
-                # Default smooth (Long range)
-                smooth = 0.3
-                
-                # Magnet Zones
-                if dist < 30: 
-                    smooth = 0.9  # INSTANT LOCK (Magnet)
-                elif dist < 100:
-                    smooth = 0.6  # Fast adjust
-                
-                move_mouse_to(cx, cy, smooth_factor=smooth)
-                
-                # Visual indicator
-                self.canvas.create_text(self.screen_width/2, 50, text="MAGNETIC LOCK ENGAGED", fill="#ff00ff", font=("Orbitron", 24, "bold"))
-                
-                # No Triggerbot (removed per request)
+            # Combat Logic
+            if self.mouse_control_var.get():
+                try:
+                    from mouse_control import move_mouse_to
+                    import math
+                    dist = math.hypot(cx - scx, cy - scy)
                     
-            except Exception as e:
-                print(f"Mouse control error: {e}")
+                    smooth = self.smooth_factor.get()
+                    rad = self.magnet_radius.get()
+                    
+                    if dist < rad: 
+                        smooth = self.magnet_smooth.get()
+                    
+                    move_mouse_to(cx, cy, smooth_factor=smooth)
+                    self.canvas.create_text(scx, 50, text="MAGNETIC LOCK ENGAGED", fill="#ff00ff", font=("Orbitron", 24, "bold"))
+                except Exception as e: print(f"Mouse Error: {e}")
         
-        # Schedule next update
-        # 10ms delay implies target ~100 FPS, but inference will bottle neck it.
-        # This is async in Tkinter so it waits for prev call to finish mostly.
         self.after(10, self.update_overlay)
 
     def toggle_combat_mode(self):
         """Toggles the Aim Assist switch."""
         current = self.mouse_control_var.get()
         self.mouse_control_var.set(not current)
+        self.save_config() # Save config when combat mode is toggled
         state = "ENABLED" if not current else "DISABLED"
         print(f"Combat Mode {state}")
+
+if __name__ == "__main__":
+    app = OverlayApp()
+    app.mainloop()

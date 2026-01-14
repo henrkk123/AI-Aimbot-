@@ -50,7 +50,7 @@ print("\nStep 2: INSTALLING BLACKWELL-READY NIGHTLY (CUDA 12.8)")
 print("👉 Target: sm_120 / RTX 50-Series Support")
 # Signal Blackwell support to pip/torch during install
 os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
-install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
+install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
 run_cmd(install_cmd)
 
 # 3. Verify
