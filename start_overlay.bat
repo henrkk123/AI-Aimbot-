@@ -38,7 +38,13 @@ if not exist .venv (
 call .venv\Scripts\activate.bat
 
 echo [1/2] Checking Dependencies...
-pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
+python -c "import ultralytics; import customtkinter" 2>nul
+if %errorlevel% NEQ 0 (
+    echo    -> Missing libraries detected. Installing...
+    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
+) else (
+    echo    -> Libraries OK. Skipping install to protect GPU drivers.
+)
 
 :: Node Setup (only if missing)
 if not exist "overlay-ui\node_modules\" (

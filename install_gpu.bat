@@ -21,7 +21,8 @@ pip uninstall -y torch torchvision torchaudio numpy
 echo.
 echo 2. Installing PREVIEW Version (RTX 50-Series Support)...
 :: RTX 5070 (SM_120) requires PyTorch Nightly + CUDA 12.6
-pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
+:: We also install ultralytics HERE so it accepts the nightly build
+pip install --pre torch torchvision torchaudio ultralytics --index-url https://download.pytorch.org/whl/nightly/cu126
 
 echo.
 echo ==================================================

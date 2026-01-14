@@ -23,7 +23,11 @@ if exist .venv\Scripts\activate.bat (
 )
 
 echo [INFO] Ensuring Trainer Dependencies...
-pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
+python -c "import ultralytics; import customtkinter" 2>nul
+if %errorlevel% NEQ 0 (
+    echo    -> Installing missing libraries...
+    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
+)
 
 python gui_training.py
 
