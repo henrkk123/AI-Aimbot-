@@ -32,15 +32,22 @@ print("This script will brutally fix your installation.")
 print("It is designed for RTX 50-Series (Blackwell).")
 print("")
 
+# 0. Environment Check
+print(f"👉 RUNNING IN: {sys.prefix}")
+print(f"👉 PYTHON EXE: {sys.executable}")
+if ".venv" not in sys.prefix and "venv" not in sys.prefix:
+    print("⚠️  WARNING: You might not be in the .venv!")
+    print("    Continuing anyway...")
+
 # 1. Purge
 print("Step 1: CLEANUP")
-run_cmd("pip uninstall -y torch torchvision torchaudio ultralytics numpy")
-run_cmd("pip cache purge")
+py_pip = f'"{sys.executable}" -m pip'
+run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy")
+run_cmd(f"{py_pip} cache purge")
 
 # 2. Install
 print("\nStep 2: INSTALLING NIGHTLY (CUDA 12.6)")
-# Note: quoting the URL is sometimes safer in some shells, but python subprocess handles it well usually.
-install_cmd = "pip install --pre torch torchvision torchaudio ultralytics numpy --index-url https://download.pytorch.org/whl/nightly/cu126"
+install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy --index-url https://download.pytorch.org/whl/nightly/cu126'
 run_cmd(install_cmd)
 
 # 3. Verify
