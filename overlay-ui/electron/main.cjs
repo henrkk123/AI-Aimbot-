@@ -24,7 +24,8 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false, // Simplify for this prototype
-            backgroundThrottling: false // Important for smooth animation
+            backgroundThrottling: false, // Important for smooth animation
+            webSecurity: false // Allow CORS/Localhost communication from file://
         }
     });
 
