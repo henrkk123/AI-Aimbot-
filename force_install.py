@@ -51,8 +51,18 @@ print(f"👉 RUNNING IN: {sys.prefix}")
 print(f"👉 PYTHON EXE: {sys.executable}")
 check_driver()
 
+py_pip = f'"{sys.executable}" -m pip'
+
 # 1. Purge
-# ... (rest of the script remains same, just adding packages to install_cmd) ...
+print("Step 1: CLEANUP")
+run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy")
+run_cmd(f"{py_pip} cache purge")
+
+# 2. Install
+print("\nStep 2: INSTALLING BLACKWELL-READY NIGHTLY (CUDA 12.8)")
+print("👉 Target: sm_120 / RTX 50-Series Support")
+# Signal Blackwell support to pip/torch during install
+os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
 install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam triton setuptools --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
 run_cmd(install_cmd)
 
