@@ -13,6 +13,10 @@ echo 3. VERIFY your GPU.
 echo.
 echo [!] Only run this if something is broken or you want to upgrade.
 echo.
+echo [1/3] KILLING LINGERING PROCESSES...
+taskkill /F /IM python.exe /T >nul 2>&1
+timeout /t 2 /nobreak >nul
+echo.
 pause
 
 call reset_env.bat
