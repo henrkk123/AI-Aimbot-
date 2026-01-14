@@ -4,44 +4,58 @@ cls
 echo ==================================================
 echo    LAUNCHING CV-OVERLAY PRO SYSTEM
 echo ==================================================
-
 cd /d "%~dp0"
 
-:: Activate venv if exists
+:: 1. Check commands
+where python >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] 'python' command not found!
+    echo Please install Python and check "Add to PATH".
+    pause
+    exit /b 1
+)
+where npm >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [ERROR] 'npm' command not found!
+    echo Please install Node.js.
+    pause
+    exit /b 1
+)
+
+:: 2. Activate Venv
 if exist .venv\Scripts\activate.bat (
-    echo [INFO] Using Virtual Environment
     call .venv\Scripts\activate.bat
 ) else (
     echo [WARN] No .venv found. Using system python.
 )
 
-:: Dependency Check (UI)
+:: 3. Check Dependencies
 if not exist "overlay-ui\node_modules\" (
-    echo ==================================================
-    echo [ERROR] UI Dependencies NOT FOUND!
-    echo.
-    echo Please run the following in a new terminal:
-    echo    cd overlay-ui
-    echo    npm install
-    echo ==================================================
+    echo [ERROR] UI missing. Please run setup_windows.bat first!
     pause
     exit /b 1
 )
 
-:: Kill old instances
+:: 4. Kill old
 taskkill /F /IM python.exe /FI "WINDOWTITLE eq CV-Overlay-Backend" >nul 2>&1
 
-:: Start Backend Hidden or Minimized
+:: 5. Launch Backend
 echo [1/2] Starting AI Core...
 start "CV-Overlay-Backend" /min python server.py
 
+echo Waiting for warmup...
 timeout /t 3 /nobreak >nul
 
-:: Start Frontend
+:: 6. Launch Frontend
 echo [2/2] Starting Liquid UI...
 cd overlay-ui
 call npm run electron
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] Application crashed.
+    pause
+)
 
 :: Cleanup
-echo Shutting down...
 taskkill /F /IM python.exe /FI "WINDOWTITLE eq CV-Overlay-Backend" >nul 2>&1
+exit /b 0

@@ -64,16 +64,23 @@ node -v            # Should be 18+
 ```
 
 ### 1-Minute Setup
-```bash
-# 1. Install Python Core
-pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
 
-# 2. Install UI
+#### 🍎 Mac / Linux
+```bash
+# 1. Install Dependencies
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
 cd overlay-ui && npm install && cd ..
 
-# 3. Launch!
+# 2. Launch!
 ./start_overlay.command
 ```
+
+#### 🪟 Windows (New!)
+All you need to do is run:
+```bat
+setup_windows.bat
+```
+Then launch with `start_overlay.bat`.
 
 ---
 

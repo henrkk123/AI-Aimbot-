@@ -31,27 +31,18 @@ We need Node to run the "Liquid Glass" UI.
 *   **Mac**: Press `Cmd + Space`, type "Terminal", hit Enter.
 *   **Windows**: Press `Start`, type "cmd", open Command Prompt.
 
-### 2. Install Key Dependencies
-Copy and paste this command to install the AI libraries:
-
-```bash
-pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
-```
-
-*Wait for it to finish...*
-
-### 3. Install UI Dependencies
-Now we prepare the beautiful interface.
-1.  Navigate into the `overlay-ui` folder:
-    *   *(If you are in the root folder)*: `cd overlay-ui`
-2.  Run the installer:
+### For Mac 🍎
+1.  Open Terminal.
+2.  Copy/Paste:
     ```bash
-    npm install
+    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+    cd overlay-ui && npm install && cd ..
     ```
-3.  Go back:
-    ```bash
-    cd ..
-    ```
+
+### For Windows 🪟 (Easiest Way)
+1.  **Double-Click** the file named:
+    > **`setup_windows.bat`**
+2.  Wait for it to say "SETUP COMPLETE".
 
 ---
 
