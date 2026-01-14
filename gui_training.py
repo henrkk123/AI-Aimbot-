@@ -176,6 +176,10 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         return True, "Dataset looks healthy."
 
     def log(self, message):
+        # THREAD SAFETY: Move UI update to main loop
+        self.after(0, lambda: self._log_internal(message))
+
+    def _log_internal(self, message):
         self.console_out.insert("end", message + "\n")
         self.console_out.see("end")
 

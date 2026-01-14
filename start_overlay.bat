@@ -37,14 +37,8 @@ if not exist .venv (
 )
 call .venv\Scripts\activate.bat
 
-:: Smart Check: Only install if missing (Faster Launch)
-python -c "import ultralytics; import customtkinter; import PIL; import cv2" >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [1/2] Installing Dependencies (First Run Only)...
-    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
-) else (
-    echo [⚡] Dependencies Ready. Skipping Install.
-)
+echo [1/2] Checking Dependencies...
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
 
 :: Node Setup (only if missing)
 if not exist "overlay-ui\node_modules\" (
