@@ -63,25 +63,14 @@ We built this for speed. No terminal needed after setup.
 
 ## 🛠️ Quick Start
 
-New to this? Read our **[Step-by-Step Installation Guide](docs/INSTALL_GUIDE.md)** or **[Training Strategy](docs/TRAINING_GUIDE.md)**.
-
-### Prerequisite Check
-```bash
-python --version   # Should be 3.10+
-node -v            # Should be 18+
-```
-
-## 🛠️ Quick Start
-
-New to this? Read our **[Step-by-Step Installation Guide](INSTALL_GUIDE.md)**.
+New to this? **[Read the Installation Guide](docs/INSTALL_GUIDE.md)**.
 
 ### 1. Prerequisites
-Ensure you have these installed:
-*   [Python 3.10+](https://www.python.org/) (Add to PATH!)
-*   [Node.js 18+](https://nodejs.org/)
+-   [Python 3.10+](https://www.python.org/) (Add to PATH!)
+-   [Node.js 18+](https://nodejs.org/)
 
 ### 2. Launch
-The launcher will **automatically install** all dependencies on the first run.
+The launcher **automatically installs** everything.
 
 #### 🍎 Mac / Linux
 ```bash
@@ -92,7 +81,7 @@ The launcher will **automatically install** all dependencies on the first run.
 ```bat
 start_overlay.bat
 ```
-*(Wait a few minutes on first launch for the self-healing system to finish)*
+*(Wait 2 mins on first launch for valid install)*
 
 ---
 
