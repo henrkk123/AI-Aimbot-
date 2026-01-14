@@ -22,9 +22,28 @@ if exist .venv (
 )
 
 echo [2/3] CREATING FRESH BRAIN...
-python -m venv .venv
+set PYTHON_EXE=python
+
+:: Check for Python Launcher (py.exe) with specific versions
+py -3.11 -c "import sys" >nul 2>&1
+if %errorlevel% equ 0 (
+    set PYTHON_EXE=py -3.11
+    echo [+] Using Python 3.11 Launcher
+) else (
+    py -3.12 -c "import sys" >nul 2>&1
+    if %errorlevel% equ 0 (
+        set PYTHON_EXE=py -3.12
+        echo [+] Using Python 3.12 Launcher
+    ) else (
+        echo [!] Warning: Python Launcher not found or 3.11/3.12 not installed via py.exe.
+        echo [!] Falling back to default 'python' command...
+    )
+)
+
+%PYTHON_EXE% -m venv .venv
 if %errorlevel% neq 0 (
-    echo [ERROR] Python not found or venv creation failed!
+    echo [ERROR] Virtual environment creation failed!
+    echo [TIP] Try installing Python 3.11 manually from python.org.
     pause
     exit /b 1
 )

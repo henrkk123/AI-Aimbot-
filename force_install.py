@@ -109,11 +109,8 @@ try:
         print("\n✅ INSTALLATION SUCCESSFUL!")
 except Exception as e:
     print(f"\n❌ VERIFICATION FAILED: {e}")
-    print("   Please check the error logs above.")
+    print("   Something went wrong during the library installation.")
+    print("   1. Ensure your NVIDIA Driver is 570+ (RTX 50-Series requirement).")
+    print("   2. Try running 'UPDATE.bat' again as Administrator.")
 
-input("\nPress Enter to exit...")
-    print("\n❌ FAILURE. Still seeing CPU?")
-    print("   1. Update your NVIDIA Driver (570+ required).")
-    print("   2. Run this script again.")
-
-input("\nPress Enter to exit...")
+input("\n[ALL DONE] Press Enter to finish...")
