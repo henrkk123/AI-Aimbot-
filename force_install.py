@@ -92,8 +92,17 @@ print("\nStep 2: INSTALLING COMPATIBLE AI CORE (CUDA 12.8)")
 os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
 
 # Install main libraries
-install_cmd = f"{py_pip} install --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python triton --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
+install_cmd = f"{py_pip} install --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
 run_cmd(install_cmd)
+
+# Optional: Triton (Performance Optimization)
+print("\nStep 2.5: OPTIONAL PERFORMANCE KERNELS (TRITON)")
+print("👉 Note: Triton is optional. If it fails, your AI will still work perfectly.")
+try:
+    # We try to install it separately so it doesn't break the main setup
+    subprocess.call(f"{py_pip} install triton", shell=True)
+except:
+    print("⚠️  Triton could not be installed. Skipping optional kernel optimizations.")
 
 # 3. Verify
 print("\nStep 3: FINAL VERIFICATION")
