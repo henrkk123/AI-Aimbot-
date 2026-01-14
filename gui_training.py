@@ -331,9 +331,11 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 imgsz=640, 
                 device=device,
                 plots=True,
-                batch=16, # Fixed batch to avoid OOM or hang on RTX 50
-                cache=False, # Disable cache to reduce memory pressure
-                workers=2, # Reduce workers for stability
+                batch=32,           # Increased for RTX 5070 (Higher memory throughput)
+                cache='ram',        # Cache 16k images in RAM for instant access after Epoch 1
+                workers=8,          # Faster data loading (Adjust to CPU cores)
+                persistent_workers=True, # Keeps workers alive between epochs
+                amp=True,           # Automatic Mixed Precision (Blackwell specialty)
                 save=True
             )
             
