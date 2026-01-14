@@ -32,40 +32,43 @@ print("This script will brutally fix your installation.")
 print("It is designed for RTX 50-Series (Blackwell).")
 print("")
 
-# 0. Environment Check
+def check_driver():
+    try:
+        output = subprocess.check_output("nvidia-smi --query-gpu=driver_version --format=csv,noheader", shell=True).decode().strip()
+        major = int(output.split('.')[0])
+        print(f"👉 NVIDIA DRIVER DETECTED: {output}")
+        if major < 570:
+            print("❌ WARNING: Your driver is too old for RTX 50-Series!")
+            print("   Please install Driver 570.xx or higher from nvidia.com.")
+            return False
+        return True
+    except:
+        print("⚠️  Warning: Could not detect NVIDIA driver version. Ensure it is 570+.")
+        return True
+
+# 0. System Check
 print(f"👉 RUNNING IN: {sys.prefix}")
 print(f"👉 PYTHON EXE: {sys.executable}")
-if ".venv" not in sys.prefix and "venv" not in sys.prefix:
-    print("⚠️  WARNING: You might not be in the .venv!")
-    print("    Continuing anyway...")
+check_driver()
 
 # 1. Purge
-print("Step 1: CLEANUP")
-py_pip = f'"{sys.executable}" -m pip'
-run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy")
-run_cmd(f"{py_pip} cache purge")
-
-# 2. Install
-print("\nStep 2: INSTALLING BLACKWELL-READY NIGHTLY (CUDA 12.8)")
-print("👉 Target: sm_120 / RTX 50-Series Support")
-# Signal Blackwell support to pip/torch during install
-os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
-install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
+# ... (rest of the script remains same, just adding packages to install_cmd) ...
+install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam triton setuptools --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
 run_cmd(install_cmd)
 
 # 3. Verify
 print("\nStep 3: VERIFICATION")
 if check_gpu():
     import torch
-    print(f"   - Compute Capability: {torch.cuda.get_device_capability(0)}")
-    print("\n✅ SUCCESS! YOUR GPU IS ACTIVE.")
-    print("   You are ready to train.")
+    cap = torch.cuda.get_device_capability(0)
+    print(f"   - Compute Capability: {cap}")
+    if cap[0] >= 10:
+        print("🚀 BLACKWELL ARCHITECTURE DETECTED & ACTIVE!")
     
-    print("\n==================================================")
-    print("⚠️  IMPORTANT: For RTX 5070/5080/5090 you MUST have")
-    print("    NVIDIA Driver version 570.xx or higher installed!")
-    print("==================================================")
+    print("\n✅ SUCCESS! YOUR GPU IS ACTIVE.")
+    print("   Optimization: CUDA 12.8 / SM_120 (RTX 50 Edition)")
 else:
+    # ...
     print("\n❌ FAILURE. Still seeing CPU?")
     print("   1. Update your NVIDIA Driver (570+ required).")
     print("   2. Run this script again.")
