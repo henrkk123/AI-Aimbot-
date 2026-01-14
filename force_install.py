@@ -93,7 +93,7 @@ print("👉 This will take a moment. We are optimizing for your specific GPU arc
 os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
 
 # Install main libraries
-install_cmd = f"{py_pip} install --quiet --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
+install_cmd = f"{py_pip} install --pre torch torchvision torchaudio ultralytics dxcam customtkinter pynput mss opencv-python --extra-index-url https://download.pytorch.org/whl/nightly/cu128"
 run_cmd(install_cmd)
 
 # Optional: Triton (Performance Optimization)
