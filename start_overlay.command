@@ -50,9 +50,15 @@ fi
 # Start Frontend
 echo "🎨 Starting Liquid UI..."
 cd overlay-ui
-# We try 'npm run electron' which works in dev. 
-# If you built the app, we could launch the .app instead, but this is safer for dev.
-npm run dev:all
+
+if [ ! -f "dist/index.html" ]; then
+    echo "🏗️  Building Overlay (First Run)..."
+    npm run build
+fi
+
+# Run in Production Mode
+echo "🚀 Launching Production Mode..."
+npm run start
 
 # Cleanup
 echo "🛑 Shutting down AI Core..."

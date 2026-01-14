@@ -59,11 +59,18 @@ start "CV-Overlay-Backend" /min python server.py
 echo Waiting for warmup...
 timeout /t 3 /nobreak >nul
 
-:: 6. Launch Frontend
+:: 6. Launch Frontend (Production Mode)
 echo [2/2] Starting Liquid UI...
 cd overlay-ui
-REM We use dev:all to run Vite + Electron together
-call npm run dev:all
+
+:: Check if build exists
+if not exist "dist\index.html" (
+    echo [INFO] First time build... (This takes 10s)
+    call npm run build
+)
+
+:: Run in Production Mode (No Localhost issues)
+call npm run start
 if %errorlevel% neq 0 (
     echo.
     echo [ERROR] Application crashed.
