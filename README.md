@@ -24,7 +24,7 @@
 A hybrid computer vision overlay designed for high-refresh-rate gaming.
 <br />
 
-[**⬇️ Download & Install**](#-quick-start) • [**📚 Documentation**](INSTALL_GUIDE.md) • [**🐛 Report Bug**](../../issues)
+[**⬇️ Download & Install**](#-quick-start) • [**📚 Documentation**](docs/INSTALL_GUIDE.md) • [**🐛 Report Bug**](../../issues)
 
 </div>
 
@@ -53,9 +53,17 @@ We built this for speed. No terminal needed after setup.
 
 ---
 
+## 🔥 Latest Updates (v0.1.19 - Stability Fixes)
+-   **🚀 Optimization**: Root folder cleaned up (files moved to `docs/`).
+-   **🛠️ Trainer**: Fixed dependency crash.
+-   **👻 Ghost Mode**: Self-aim prevention active.
+-   **🎯 Sticky Aim**: Target switching fixed.
+
+---
+
 ## 🛠️ Quick Start
 
-New to this? Read our **[Step-by-Step Installation Guide](INSTALL_GUIDE.md)**.
+New to this? Read our **[Step-by-Step Installation Guide](docs/INSTALL_GUIDE.md)** or **[Training Strategy](docs/TRAINING_GUIDE.md)**.
 
 ### Prerequisite Check
 ```bash
