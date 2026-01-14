@@ -206,8 +206,21 @@ class OverlayApp(ctk.CTk):
         if self.mouse_control_var.get():
             try:
                 from mouse_control import move_mouse_to
-                # Aimbot
-                move_mouse_to(cx, cy, smooth_factor=0.3)
+                # Aimbot - Dynamic Magnet Logic
+                # Calculate distance to center
+                import math
+                dist = math.hypot(cx - self.screen_width/2, cy - self.screen_height/2)
+                
+                # Default smooth (Long range)
+                smooth = 0.3
+                
+                # Magnet Zones
+                if dist < 30: 
+                    smooth = 0.9  # INSTANT LOCK (Magnet)
+                elif dist < 100:
+                    smooth = 0.6  # Fast adjust
+                
+                move_mouse_to(cx, cy, smooth_factor=smooth)
                 
                 # Visual indicator
                 self.canvas.create_text(self.screen_width/2, 50, text="!!! AIM ASSIST ACTIVE !!!", fill="red", font=("Arial", 16, "bold"))
