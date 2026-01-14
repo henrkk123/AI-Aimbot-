@@ -1,10 +1,25 @@
 @echo off
-title UNLEASH THE BEAST (RTX 5070 Setup)
+title UNIVERSAL NVIDIA UNLOCKER (RTX 30/40/50 Series)
 cls
 echo ==================================================
 echo    ENABLING GPU ACCELERATION (CUDA)
 echo ==================================================
 echo.
+
+:: 1. Check if already active
+if exist .venv (
+    call .venv\Scripts\activate.bat
+    python -c "import torch; exit(0) if torch.cuda.is_available() else exit(1)"
+    if %ERRORLEVEL% EQU 0 (
+        echo.
+        echo ✅ GREAT NEWS: Your GPU is ALREADY working!
+        echo    No need to reinstall anything.
+        echo.
+        pause
+        exit /b
+    )
+)
+
 echo Detected desire for SPEED.
 echo We will reinstall PyTorch with NVIDIA CUDA support.
 echo.
