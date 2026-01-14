@@ -18,9 +18,9 @@ call .venv\Scripts\activate.bat
 pip uninstall -y torch torchvision torchaudio
 
 echo.
-echo 2. Installing CUDA version (Stable)...
-:: Using generic index-url for latest stable CUDA (likely 12.x for 50-series)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+echo 2. Installing CUDA 11.8 version (Maximum Compatibility)...
+:: CUDA 11.8 is the "Golden Standard" for YOLOv8 stability
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 echo.
 echo ==================================================
