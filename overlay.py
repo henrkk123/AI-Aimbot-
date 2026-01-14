@@ -67,22 +67,22 @@ class OverlayApp(ctk.CTk):
         
         # --- UI CONTROLS ---
         # Floating Control Panel (Top Left)
-        self.control_frame = ctk.CTkFrame(self, fg_color="#1a1a1a", corner_radius=10, border_width=1, border_color="#00ff00")
+        self.control_frame = ctk.CTkFrame(self, fg_color="#0a0a0a", corner_radius=15, border_width=2, border_color="#00ffff")
         self.control_frame.place(relx=0.02, rely=0.05, anchor="nw")
         
-        self.title_label = ctk.CTkLabel(self.control_frame, text="YOLO SYSTEM ONLINE", text_color="#00ff00", font=("Orbitron", 14, "bold"))
-        self.title_label.pack(padx=10, pady=(10, 5))
+        self.title_label = ctk.CTkLabel(self.control_frame, text="NEURAL EDGE v3.5", text_color="#00ffff", font=("Orbitron", 14, "bold"))
+        self.title_label.pack(padx=15, pady=(15, 5))
         
-        self.train_ui_btn = ctk.CTkButton(self.control_frame, text="OPEN DATASET UI", command=self.open_training_ui,
-                                          fg_color="#003300", hover_color="#005500", text_color="#00ff00", border_color="#00ff00", border_width=1)
-        self.train_ui_btn.pack(padx=10, pady=5)
+        self.train_ui_btn = ctk.CTkButton(self.control_frame, text="NEURAL TRAINING", command=self.open_training_ui,
+                                          fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
+        self.train_ui_btn.pack(padx=15, pady=5)
         
         # Mouse Control Switch (HOTKEY: 0)
         self.mouse_control_var = ctk.BooleanVar(value=False)
-        self.mouse_switch = ctk.CTkSwitch(self.control_frame, text="COMBAT MODE [0]", variable=self.mouse_control_var,
-                                          progress_color="#ff0000", button_color="#cc0000", button_hover_color="#ff3333",
-                                          text_color="#ff0000", font=("Arial", 10, "bold"))
-        self.mouse_switch.pack(padx=10, pady=(5, 10))
+        self.mouse_switch = ctk.CTkSwitch(self.control_frame, text="MAGNET LOCK [0]", variable=self.mouse_control_var,
+                                          progress_color="#ff00ff", button_color="#cc00cc", button_hover_color="#ff55ff",
+                                          text_color="#ff00ff", font=("Orbitron", 11, "bold"))
+        self.mouse_switch.pack(padx=15, pady=(5, 15))
         
         # State
         self.training_window = None
@@ -135,28 +135,34 @@ class OverlayApp(ctk.CTk):
         else:
             self.training_window.focus()
 
-    def draw_bracket(self, x, y, w, h, length=20, color="#00ff00", thickness=3):
-        """Draws sci-fi corner brackets properly."""
-        # Top Left
-        self.canvas.create_line(x, y, x + length, y, fill=color, width=thickness)
-        self.canvas.create_line(x, y, x, y + length, fill=color, width=thickness)
-        # Top Right
-        self.canvas.create_line(x + w, y, x + w - length, y, fill=color, width=thickness)
-        self.canvas.create_line(x + w, y, x + w, y + length, fill=color, width=thickness)
-        # Bottom Left
-        self.canvas.create_line(x, y + h, x + length, y + h, fill=color, width=thickness)
-        self.canvas.create_line(x, y + h, x, y + h - length, fill=color, width=thickness)
-        # Bottom Right
-        self.canvas.create_line(x + w, y + h, x + w - length, y + h, fill=color, width=thickness)
-        self.canvas.create_line(x + w, y + h, x + w, y + h - length, fill=color, width=thickness)
+    def draw_bracket(self, x, y, w, h, length=20, color="#00ffff", thickness=2):
+        """Draws sci-fi corner brackets with NEON GLOW."""
+        # GLOW LAYER (Slightly wider, dimmer)
+        glow_color = "#006666"
+        gt = thickness + 2
+        
+        for c, t in [(glow_color, gt), (color, thickness)]:
+            # Top Left
+            self.canvas.create_line(x, y, x + length, y, fill=c, width=t)
+            self.canvas.create_line(x, y, x, y + length, fill=c, width=t)
+            # Top Right
+            self.canvas.create_line(x + w, y, x + w - length, y, fill=c, width=t)
+            self.canvas.create_line(x + w, y, x + w, y + length, fill=c, width=t)
+            # Bottom Left
+            self.canvas.create_line(x, y + h, x + length, y + h, fill=c, width=t)
+            self.canvas.create_line(x, y + h, x, y + h - length, fill=c, width=t)
+            # Bottom Right
+            self.canvas.create_line(x + w, y + h, x + w - length, y + h, fill=c, width=t)
+            self.canvas.create_line(x + w, y + h, x + w, y + h - length, fill=c, width=t)
 
     def draw_hud_elements(self, cx, cy):
         """Draws decorative HUD lines"""
-        # Crosshair lines
-        self.canvas.create_line(cx - 30, cy, cx - 10, cy, fill="#00ff00", width=1)
-        self.canvas.create_line(cx + 10, cy, cx + 30, cy, fill="#00ff00", width=1)
-        self.canvas.create_line(cx, cy - 30, cx, cy - 10, fill="#00ff00", width=1)
-        self.canvas.create_line(cx, cy + 10, cx, cy + 30, fill="#00ff00", width=1)
+        # Crosshair lines (Cyan)
+        color = "#00ffff"
+        self.canvas.create_line(cx - 30, cy, cx - 10, cy, fill=color, width=1)
+        self.canvas.create_line(cx + 10, cy, cx + 30, cy, fill=color, width=1)
+        self.canvas.create_line(cx, cy - 30, cx, cy - 10, fill=color, width=1)
+        self.canvas.create_line(cx, cy + 10, cx, cy + 30, fill=color, width=1)
 
     def update_overlay(self):
         """
@@ -195,12 +201,12 @@ class OverlayApp(ctk.CTk):
             
             # Center target
             self.draw_hud_elements(cx, cy)
-            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="red", outline="#00ff00")
+            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ff00ff", outline="#00ffff", width=2)
             
             # Text Info
-            self.canvas.create_text(x + box_w + 5, y, text="TARGET LOCKED", fill="#00ff00", anchor="nw", font=("Courier", 12, "bold"))
-            self.canvas.create_text(x + box_w + 5, y + 15, text=f"CONF: {confidence:.2%}", fill="#00ff00", anchor="nw", font=("Courier", 10))
-            self.canvas.create_text(x + box_w + 5, y + 30, text=f"MODEL: YOLOv8n", fill="#00ff00", anchor="nw", font=("Courier", 10))
+            self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ffff", anchor="nw", font=("Orbitron", 12, "bold"))
+            self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
+            self.canvas.create_text(x + box_w + 10, y + 35, text=f"CORE: NIGHTLY", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
 
             # 4. Combat Logic (Mouse Control / Aim Assist Only)
         if self.mouse_control_var.get():
@@ -223,7 +229,7 @@ class OverlayApp(ctk.CTk):
                 move_mouse_to(cx, cy, smooth_factor=smooth)
                 
                 # Visual indicator
-                self.canvas.create_text(self.screen_width/2, 50, text="!!! AIM ASSIST ACTIVE !!!", fill="red", font=("Arial", 16, "bold"))
+                self.canvas.create_text(self.screen_width/2, 50, text="MAGNETIC LOCK ENGAGED", fill="#ff00ff", font=("Orbitron", 24, "bold"))
                 
                 # No Triggerbot (removed per request)
                     

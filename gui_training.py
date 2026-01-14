@@ -9,7 +9,7 @@ import sys
 # Validate CustomTkinter is effectively imported
 try:
     ctk.set_appearance_mode("Dark")
-    ctk.set_default_color_theme("green")
+    ctk.set_default_color_theme("blue") # Blue is closer to Cyan
 except Exception as e:
     print(f"Error init CTK: {e}")
 
@@ -25,8 +25,8 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.header_frame = ctk.CTkFrame(self, fg_color="#1a1a1a", height=60, corner_radius=0)
         self.header_frame.pack(fill="x", side="top")
         
-        self.label = ctk.CTkLabel(self.header_frame, text="YOLO TRAINING CONTROL", 
-                                  font=("Orbitron", 20, "bold"), text_color="#00ff00")
+        self.label = ctk.CTkLabel(self.header_frame, text="NEURAL CORE TRAINER", 
+                                  font=("Orbitron", 24, "bold"), text_color="#00ffff")
         self.label.pack(pady=15)
         
         # Content Grid
@@ -130,10 +130,11 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.console_out = ctk.CTkTextbox(self.right_panel, fg_color="#000", text_color="#0f0", font=("Courier", 10))
         self.console_out.pack(fill="both", expand=True, padx=10, pady=10)
         
-        self.train_btn = ctk.CTkButton(self.right_panel, text="START REAL TRAINING", 
-                                       font=("Arial", 12, "bold"),
-                                       fg_color="#004400", hover_color="#006600", 
-                                       border_color="#00ff00", border_width=2,
+        self.train_btn = ctk.CTkButton(self.right_panel, text="INITIATE TRAINING", 
+                                       font=("Orbitron", 14, "bold"),
+                                       fg_color="#003333", hover_color="#005555", 
+                                       border_color="#00ffff", border_width=2,
+                                       text_color="#00ffff",
                                        command=self.start_training_thread)
         self.train_btn.pack(pady=20)
 
