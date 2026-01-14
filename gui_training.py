@@ -164,17 +164,23 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
     def prepare_merged_dataset(self):
         if not self.dataset_paths: return None
         
-        # If only 1, use it directly (Legacy Mode)
-        if len(self.dataset_paths) == 1:
-            folder_path = self.dataset_paths[0]
-            # Create config
-            yaml_path = os.path.join(folder_path, "data.yaml")
+            # Create standard structure
+            train_img_dir = os.path.join(folder_path, "images", "train")
+            train_lbl_dir = os.path.join(folder_path, "labels", "train")
+            
+            # If standard structure already exists, we are good.
+            # If not, YOLO might fail if files are just in the root.
+            # We'll create a temp yaml that points correctly.
+            
+            yaml_path = os.path.join(folder_path, "data_neural.yaml")
             try:
                 with open(yaml_path, 'w') as f:
                     abs_path = os.path.abspath(folder_path)
                     f.write(f"path: {abs_path}\n")
-                    f.write(f"train: .\n") 
-                    f.write(f"val: .\n") 
+                    # Check if images/ folder exists, else use root
+                    img_prefix = "images" if os.path.exists(os.path.join(abs_path, "images")) else "."
+                    f.write(f"train: {img_prefix}\n") 
+                    f.write(f"val: {img_prefix}\n") 
                     f.write("names:\n  0: Target\n")
                 return yaml_path
             except:
@@ -182,23 +188,27 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 
         # Merge Mode
         import shutil
-        self.log(f"🌪️ Merging {len(self.dataset_paths)} datasets...")
+        self.log(f"🌪️ Merging {len(self.dataset_paths)} datasets into Neural Structure...")
         merged_dir = os.path.abspath("merged_training_data")
         if os.path.exists(merged_dir): shutil.rmtree(merged_dir)
-        os.makedirs(merged_dir)
+        
+        # Proper YOLO structure
+        os.makedirs(os.path.join(merged_dir, "images", "train"))
+        os.makedirs(os.path.join(merged_dir, "labels", "train"))
         
         total_imgs = 0
         
         for i, src in enumerate(self.dataset_paths):
             self.log(f"   -> Copying {os.path.basename(src)}...")
             for f in os.listdir(src):
-                if f.lower().endswith(('.jpg', '.png', '.txt')):
-                    # Prefix files to avoid collision
-                    # e.g. "dataset1_image0.jpg"
+                f_lower = f.lower()
+                if f_lower.endswith(('.jpg', '.png', '.jpeg')):
                     new_name = f"{i}_{f}"
-                    shutil.copy2(os.path.join(src, f), os.path.join(merged_dir, new_name))
-                    if f.endswith('.txt'): total_imgs += 0 # ignore
-                    else: total_imgs += 1
+                    shutil.copy2(os.path.join(src, f), os.path.join(merged_dir, "images", "train", new_name))
+                    total_imgs += 1
+                elif f_lower.endswith('.txt') and f != "classes.txt":
+                    new_name = f"{i}_{f}"
+                    shutil.copy2(os.path.join(src, f), os.path.join(merged_dir, "labels", "train", new_name))
                     
         self.log(f"✅ Merged {total_imgs} images into '{merged_dir}'")
         
@@ -206,8 +216,8 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         yaml_path = os.path.join(merged_dir, "data.yaml")
         with open(yaml_path, 'w') as f:
             f.write(f"path: {merged_dir}\n")
-            f.write(f"train: .\n") 
-            f.write(f"val: .\n") 
+            f.write(f"train: images/train\n") 
+            f.write(f"val: images/train\n") 
             f.write("names:\n  0: Target\n")
             
         return yaml_path
@@ -303,7 +313,9 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 imgsz=640, 
                 device=device,
                 plots=True,
-                batch=-1, # Auto-batch to maximize memory usage specifically for 4000 images
+                batch=16, # Fixed batch to avoid OOM or hang on RTX 50
+                cache=False, # Disable cache to reduce memory pressure
+                workers=2, # Reduce workers for stability
                 save=True
             )
             
