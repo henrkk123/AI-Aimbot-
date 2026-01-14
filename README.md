@@ -11,9 +11,13 @@
 
 <br />
 
-<!-- PLACEHOLDER FOR DEMO GIF -->
-<!-- Replace 'demo.gif' with your actual recorded gameplay! -->
-![CV-Overlay Demo](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3R6eW55b3Z6eW55b3Z6eW55b3Z6eW55b3Z6eW55b3Z6eW55b3Z6/xT9IgzoKnwFNmISR8I/giphy.gif)
+<!-- VISUAL DEMO -->
+<div align="center">
+  <img src="https://media1.tenor.com/m/bckhFp1icFYAAAAC/aimbot.gif" width="45%" alt="Aimbot Activated" />
+  <img src="https://media1.tenor.com/m/J3SGgrxQeGQAAAAC/gif-ref-do-something.gif" width="45%" alt="Do Something" />
+</div>
+
+<br />
 
 **Zero Latency. Liquid Glass UI. GPU Accelerated.**
 <br />
