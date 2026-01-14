@@ -105,6 +105,7 @@ class OverlayApp(ctk.CTk):
         self.create_slider("Magnet Radius (px)", self.magnet_radius, 10, 500)
         self.create_slider("Conf Threshold", self.conf_threshold, 0.1, 1.0)
         self.create_slider("Target Offset (Head-Chest)", self.target_offset, -0.5, 0.5)
+        self.create_slider("Prediction Intensity (Leading)", self.prediction_factor, 0.0, 5.0)
 
         self.train_ui_btn = ctk.CTkButton(self.control_frame, text="NEURAL TRAINING", command=self.open_training_ui,
                                           fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
@@ -153,6 +154,7 @@ class OverlayApp(ctk.CTk):
             "magnet_radius": 50,
             "conf_threshold": 0.5,
             "target_offset": -0.2, # Default slightly above center (Chest/Neck)
+            "prediction_factor": 1.0, # New Prediction setting
             "combat_mode": False
         }
         
@@ -168,6 +170,7 @@ class OverlayApp(ctk.CTk):
         self.magnet_radius = ctk.DoubleVar(value=defaults["magnet_radius"])
         self.conf_threshold = ctk.DoubleVar(value=defaults["conf_threshold"])
         self.target_offset = ctk.DoubleVar(value=defaults["target_offset"])
+        self.prediction_factor = ctk.DoubleVar(value=defaults["prediction_factor"])
         self.mouse_control_var = ctk.BooleanVar(value=defaults["combat_mode"])
 
     def save_config(self):
@@ -177,6 +180,7 @@ class OverlayApp(ctk.CTk):
             "magnet_radius": self.magnet_radius.get(),
             "conf_threshold": self.conf_threshold.get(),
             "target_offset": self.target_offset.get(),
+            "prediction_factor": self.prediction_factor.get(),
             "combat_mode": self.mouse_control_var.get()
         }
         try:
@@ -196,6 +200,7 @@ class OverlayApp(ctk.CTk):
                 self.vision.conf_threshold = self.conf_threshold.get()
                 self.vision.sticky_radius = self.magnet_radius.get()
                 self.vision.target_offset = self.target_offset.get()
+                self.vision.prediction_factor = self.prediction_factor.get() # Update prediction factor
             self.save_config() # Save config on slider change
 
         slider = ctk.CTkSlider(self.settings_frame, from_=min_val, to=max_val, variable=variable, command=update_lbl,
@@ -219,6 +224,7 @@ class OverlayApp(ctk.CTk):
                 self.vision.conf_threshold = self.conf_threshold.get()
                 self.vision.sticky_radius = self.magnet_radius.get()
                 self.vision.target_offset = self.target_offset.get()
+                self.vision.prediction_factor = self.prediction_factor.get() # Pass prediction factor
                 
                 result = self.vision.detect_screen()
                 self.latest_detection = result
@@ -269,18 +275,20 @@ class OverlayApp(ctk.CTk):
             self.canvas.create_oval(scx - r, scy - r, scx + r, scy + r, outline="#555555", dash=(4, 4))
             
         x, y, box_w, box_h = 0, 0, 0, 0
+        px, py = 0, 0 # Predicted coordinates
         detected = False
         confidence = 0.0
 
         if self.use_vision:
             target = self.latest_detection
             if target:
-                x, y, box_w, box_h, confidence = target
+                x, y, box_w, box_h, confidence, px, py = target # Unpack predicted coordinates
                 detected = True
         else:
             # Fallback to simulation
             w, h = 640, 640 # Dummy ROI
             x, y, box_w, box_h = generate_dummy_data(self.screen_width, self.screen_height)
+            px, py = calculate_centroid(x, y, box_w, box_h) # For simulation, prediction is just centroid
             detected = True
             confidence = random.uniform(0.8, 0.99)
 
@@ -291,8 +299,17 @@ class OverlayApp(ctk.CTk):
             
             self.draw_bracket(x, y, box_w, box_h, length=min(box_w, box_h)//4, color="#00ffff")
             self.draw_hud_elements(cx, cy)
-            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ff00ff", outline="#00ffff", width=2)
             
+            # --- HUD UPDATES ---
+            # Current Point (Pink)
+            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ff00ff", outline="#00ffff", width=1)
+            
+            # Prediction Path (Neon Ghost)
+            if self.prediction_factor.get() > 0:
+                self.canvas.create_line(cx, cy, px, py, fill="#00ffff", dash=(2, 2))
+                self.canvas.create_oval(px - 3, py - 3, px + 3, py + 3, outline="#ff00ff", width=2)
+                self.canvas.create_text(px + 5, py + 5, text="PRED", fill="#ff00ff", font=("Orbitron", 8))
+
             self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ffff", anchor="nw", font=("Orbitron", 12, "bold"))
             self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
 
@@ -301,7 +318,9 @@ class OverlayApp(ctk.CTk):
                 try:
                     from mouse_control import move_mouse_to
                     import math
-                    dist = math.hypot(cx - scx, cy - scy)
+                    # Aim at predicted point if enabled, else current center
+                    aim_x, aim_y = (px, py) if self.prediction_factor.get() > 0 else (cx, cy)
+                    dist = math.hypot(aim_x - scx, aim_y - scy)
                     
                     smooth = self.smooth_factor.get()
                     rad = self.magnet_radius.get()
@@ -309,7 +328,7 @@ class OverlayApp(ctk.CTk):
                     if dist < rad: 
                         smooth = self.magnet_smooth.get()
                     
-                    move_mouse_to(cx, cy, smooth_factor=smooth)
+                    move_mouse_to(aim_x, aim_y, smooth_factor=smooth)
                     self.canvas.create_text(scx, 50, text="MAGNETIC LOCK ENGAGED", fill="#ff00ff", font=("Orbitron", 24, "bold"))
                 except Exception as e: print(f"Mouse Error: {e}")
         

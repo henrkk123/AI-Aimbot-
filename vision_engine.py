@@ -71,41 +71,39 @@ class VisionEngine:
 
         self.lock = threading.Lock()
         
-        # Tracking Memory for Sticky Logic
+        # Tracking Memory for Sticky Logic & Prediction
         self.last_target_center = None
-        
+        self.last_capture_time = time.time()
+        self.velocity_x = 0.0
+        self.velocity_y = 0.0
+        self.prediction_factor = 0.0 # Will be updated by HUD
+
     def capture_screen(self):
         """
         Captures the defined ROI using the fastest available method.
         """
+        self.last_capture_time = time.time()
         if self.use_dxcam:
             frame = self.camera.grab()
             if frame is not None:
-                # DXCam returns RGB by default, often as a numpy array
                 return frame
-            # If grab fails, it returns None
         
-        # Fallback to MSS
         screenshot = self.sct.grab(self.capture_area)
         img = np.array(screenshot)
-        return cv2.cvtColor(img, cv2.COLOR_BGRA2RGB) # Keep RGB for YOLO
+        return cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
 
     def detect_screen(self, conf_threshold=None):
         """
         Captures screen ROI and runs inference. 
-        Returns tuple: (x, y, w, h, conf) in GLOBAL coordinates.
+        Returns tuple: (x, y, w, h, conf, pred_x, pred_y) in GLOBAL coordinates.
         """
         if conf_threshold is None:
             conf_threshold = self.conf_threshold
 
+        t_start = time.time()
         frame = self.capture_screen()
         
-        # Run inference on the specific device
-        # 'half=True' uses FP16 precision (faster on GPU)
-        # 'verbose=False' keeps terminal clean
         results = self.model(frame, stream=True, verbose=False, conf=conf_threshold, device=self.device)
-        # Note: half=True is automatic on many recent YOLO versions when on GPU, 
-        # but we let ultralytics handle the defaults for stability unless explicit speedup is needed.
         
         best_box = None
         max_score = 0.0
@@ -115,8 +113,6 @@ class VisionEngine:
             boxes = r.boxes
             for box in boxes:
                 confidence = float(box.conf[0])
-                
-                # Get Coords
                 x1, y1, x2, y2 = box.xyxy[0]
                 global_x1 = int(x1) + self.roi_left
                 global_y1 = int(y1) + self.roi_top
@@ -126,42 +122,46 @@ class VisionEngine:
                 w = global_x2 - global_x1
                 h = global_y2 - global_y1
                 
-                # Center
                 cx = global_x1 + w // 2
                 cy = global_y1 + h // 2
                 
                 # Apply Target Offset (Shift Vertical Center)
                 cy += int(h * self.target_offset)
-
-                
-                # --- PLAYER DEADZONE FILTER ---
-                # Fortnite/3rd Person: Player is Bottom Center.
-                # ROI is 640x640. Center is 320,320.
-                # Rel Y > 320 (Bottom half) AND Rel X within 100px of center.
                 
                 rel_x = cx - self.roi_left
                 rel_y = cy - self.roi_top
                 
-                # Config: Bottom 55% height, Center 10% width (More lenient)
                 if rel_y > (self.roi_size * 0.55): 
-                     if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.10): # Shrink width check to 10%
-                         # print("👻 Ignored Player")
+                     if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.10):
                          continue 
                 
-                # Score = Conf + Sticky Bonus
                 score = confidence
                 if self.last_target_center:
                     lcx, lcy = self.last_target_center
                     dist = np.hypot(cx - lcx, cy - lcy)
-                    if dist < self.sticky_radius: # Dynamic Sticky Radius
-                        score += 0.5 # MASSIVE BONUS to keep lock
+                    if dist < self.sticky_radius:
+                        score += 0.5
                 
                 if score > max_score:
                     max_score = score
-                    best_box = (global_x1, global_y1, w, h, confidence)
+                    # --- PREDICTION LOGIC ---
+                    pred_x, pred_y = cx, cy
+                    if self.last_target_center and self.prediction_factor > 0:
+                        dt = max(0.001, t_start - self.last_capture_time)
+                        self.velocity_x = (cx - self.last_target_center[0]) / dt
+                        self.velocity_y = (cy - self.last_target_center[1]) / dt
+                        
+                        # Project position (prediction_factor acts as 'lookahead' intensity)
+                        # We use a fixed-time projection (e.g., 0.05s) scaled by intensity
+                        lookahead = 0.02 * self.prediction_factor 
+                        pred_x = cx + (self.velocity_x * lookahead)
+                        pred_y = cy + (self.velocity_y * lookahead)
+
+                    best_box = (global_x1, global_y1, w, h, confidence, int(pred_x), int(pred_y))
                     best_center = (cx, cy)
         
         # Update memory
         self.last_target_center = best_center
+        self.last_capture_time = t_start
                     
         return best_box
