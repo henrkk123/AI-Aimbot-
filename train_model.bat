@@ -22,6 +22,9 @@ if exist .venv\Scripts\activate.bat (
     echo [WARN] No .venv found. Using system python.
 )
 
+echo [INFO] Ensuring Trainer Dependencies...
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python customtkinter packaging pillow
+
 python gui_training.py
 
 echo.
