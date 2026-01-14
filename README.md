@@ -10,8 +10,7 @@
 
 <!-- VISUAL DEMO -->
 <div align="center">
-  <img src="https://media1.tenor.com/m/bckhFp1icFYAAAAC/aimbot.gif" width="45%" alt="Aimbot Activated" />
-  <img src="https://media1.tenor.com/m/J3SGgrxQeGQAAAAC/gif-ref-do-something.gif" width="45%" alt="Do Something" />
+  <img src="https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExc2tva3A5N3c0NnVmZjE1MWVwc2RlemtiZG04c3Y5MGlleDNmMWpvbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/2SYpZ92iLQsF6QZl5u/giphy.gif" width="90%" alt="Aimbot Activated" />
 </div>
 
 <br />

@@ -47,7 +47,7 @@ run_cmd(f"{py_pip} cache purge")
 
 # 2. Install
 print("\nStep 2: INSTALLING NIGHTLY (CUDA 12.6)")
-install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy --index-url https://download.pytorch.org/whl/nightly/cu126'
+install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy --extra-index-url https://download.pytorch.org/whl/nightly/cu126'
 run_cmd(install_cmd)
 
 # 3. Verify
