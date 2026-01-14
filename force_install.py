@@ -50,20 +50,21 @@ def check_python_version():
     major, minor = sys.version_info.major, sys.version_info.minor
     print(f"👉 PYTHON VERSION: {sys.version.split()[0]}")
     
-    # 3.10 and 3.11 are the "Golden" versions for AI libraries.
-    # 3.12 is okay for some, but 3.13 is way too new for torch nightly.
-    if major != 3 or minor < 10 or minor > 12:
+    # 3.11 or 3.12 is the current sweet spot for the latest AI libraries.
+    # 3.10 is becoming too old for some new packages.
+    # 3.13 is still too experimental for binary wheels.
+    if major != 3 or minor < 11 or minor > 12:
         print("\n" + "!"*50)
-        print("❌ CRITICAL ERROR: WRONG PYTHON VERSION!")
+        print("❌ CRITICAL ERROR: INCOMPATIBLE PYTHON VERSION!")
         print(f"   You are using Python {major}.{minor}.")
-        print("   AI libraries (Torch/YOLO) HATE this version.")
+        print("   The latest AI Core (v0.5.7) requires Python 3.11 or 3.12.")
         print("\n   PLEASE DO THIS:")
         print("   1. Uninstall your current Python.")
-        print("   2. Install Python 3.10.11 (The Golden Version).")
-        print("   🔗 Download: https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe")
+        print("   2. Install Python 3.11.9 (The New Standard).")
+        print("   🔗 Download: https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe")
         print("   3. Make sure to check 'Add to PATH' during install!")
         print("!"*50 + "\n")
-        time.sleep(2)
+        time.sleep(3)
         return False
     return True
 
@@ -78,34 +79,39 @@ check_driver()
 
 py_pip = f'"{sys.executable}" -m pip'
 
-# 0.5 Upgrade Pip (Fixes most "No matching distribution" errors)
-print("Step 0.5: UPGRADING PIP")
-run_cmd(f"{py_pip} install --upgrade pip")
-print("Step 1: CLEANUP")
-run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy")
+# 0.5 Upgrade Pip & Build Tools
+print("Step 0.5: PREPARING ENVIRONMENT")
+run_cmd(f"{py_pip} install --upgrade pip setuptools wheel")
+
+# 1. Purge
+print("Step 1: DEEP CLEANUP")
+run_cmd(f"{py_pip} uninstall -y torch torchvision torchaudio ultralytics numpy customtkinter pynput mss opencv-python dxcam")
 run_cmd(f"{py_pip} cache purge")
 
 # 2. Install
-print("\nStep 2: INSTALLING BLACKWELL-READY NIGHTLY (CUDA 12.8)")
-print("👉 Target: sm_120 / RTX 50-Series Support")
-# Signal Blackwell support to pip/torch during install
+print("\nStep 2: INSTALLING COMPATIBLE AI CORE (CUDA 12.8)")
 os.environ["TORCH_CUDA_ARCH_LIST"] = "10.0;11.0;12.0" 
-install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam triton setuptools --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
+# We explicitly list all libs to ensure nothing is missed
+install_cmd = f'{py_pip} install --pre torch torchvision torchaudio ultralytics numpy dxcam customtkinter pynput mss opencv-python triton --extra-index-url https://download.pytorch.org/whl/nightly/cu128'
 run_cmd(install_cmd)
 
 # 3. Verify
-print("\nStep 3: VERIFICATION")
-if check_gpu():
+print("\nStep 3: FINAL VERIFICATION")
+try:
     import torch
-    cap = torch.cuda.get_device_capability(0)
-    print(f"   - Compute Capability: {cap}")
-    if cap[0] >= 10:
-        print("🚀 BLACKWELL ARCHITECTURE DETECTED & ACTIVE!")
-    
-    print("\n✅ SUCCESS! YOUR GPU IS ACTIVE.")
-    print("   Optimization: CUDA 12.8 / SM_120 (RTX 50 Edition)")
-else:
-    # ...
+    import customtkinter
+    import ultralytics
+    print("✅ ALL LIBRARIES DETECTED.")
+    if check_gpu():
+        cap = torch.cuda.get_device_capability(0)
+        if cap[0] >= 10:
+            print("🚀 BLACKWELL (RTX 50) ARCHITECTURE ACTIVE!")
+        print("\n✅ INSTALLATION SUCCESSFUL!")
+except Exception as e:
+    print(f"\n❌ VERIFICATION FAILED: {e}")
+    print("   Please check the error logs above.")
+
+input("\nPress Enter to exit...")
     print("\n❌ FAILURE. Still seeing CPU?")
     print("   1. Update your NVIDIA Driver (570+ required).")
     print("   2. Run this script again.")
