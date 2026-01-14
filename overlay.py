@@ -94,18 +94,18 @@ class OverlayApp(ctk.CTk):
         self.hud_minimized = False
         
         # Floating Control Panel (Top Left)
-        self.control_frame = ctk.CTkFrame(self, fg_color="#0a0a0a", corner_radius=15, border_width=2, border_color="#00ffff")
+        self.control_frame = ctk.CTkFrame(self, fg_color="#0a0a0a", corner_radius=15, border_width=2, border_color="#00ff00")
         self.control_frame.place(relx=0.02, rely=0.05, anchor="nw")
         
         # Title & Minimize Button HP
         self.header_frame = ctk.CTkFrame(self.control_frame, fg_color="transparent")
         self.header_frame.pack(fill="x", padx=10, pady=(10, 0))
 
-        self.title_label = ctk.CTkLabel(self.header_frame, text="NEURAL EDGE v3.5", text_color="#00ffff", font=("Orbitron", 14, "bold"))
+        self.title_label = ctk.CTkLabel(self.header_frame, text="AXION CORE ENGINE", text_color="#00ff00", font=("Orbitron", 14, "bold"))
         self.title_label.pack(side="left", padx=5)
         
         self.minimize_btn = ctk.CTkButton(self.header_frame, text="_", width=25, height=25,
-                                           fg_color="#1a1a1a", hover_color="#333", text_color="#00ffff",
+                                           fg_color="#1a1a1a", hover_color="#333", text_color="#00ff00",
                                            command=self.toggle_hud)
         self.minimize_btn.pack(side="right", padx=5)
         
@@ -117,18 +117,18 @@ class OverlayApp(ctk.CTk):
         self.switch_frame.pack(fill="x", padx=10)
 
         self.mouse_switch = ctk.CTkSwitch(self.switch_frame, text="MAGNET LOCK [0]", variable=self.mouse_control_var,
-                                          progress_color="#ff00ff", button_color="#cc00cc", button_hover_color="#ff55ff",
-                                          text_color="#ff00ff", font=("Orbitron", 11, "bold"))
+                                          progress_color="#00ff00", button_color="#008800", button_hover_color="#00aa00",
+                                          text_color="#00ff00", font=("Orbitron", 11, "bold"))
         self.mouse_switch.pack(side="left", padx=5, pady=10)
         
         # FOV Toggle
         self.fov_switch = ctk.CTkSwitch(self.switch_frame, text="FOV RING", variable=self.show_fov,
-                                         progress_color="#00ffff", button_color="#00cccc",
-                                         text_color="#00ffff", font=("Orbitron", 11, "bold"))
+                                         progress_color="#00ff00", button_color="#008800",
+                                         text_color="#00ff00", font=("Orbitron", 11, "bold"))
         self.fov_switch.pack(side="left", padx=5, pady=10)
 
         self.settings_btn = ctk.CTkButton(self.menu_container, text="⚙️ SETTINGS", width=100,
-                                          fg_color="#1a1a1a", hover_color="#2a2a2a", text_color="#00ffff",
+                                          fg_color="#1a1a1a", hover_color="#2a2a2a", text_color="#00ff00",
                                           command=self.toggle_settings)
         self.settings_btn.pack(padx=15, pady=5)
 
@@ -151,7 +151,7 @@ class OverlayApp(ctk.CTk):
         self.create_slider("Smart Mask Height", self.mask_height, 0.0, 0.8)
 
         self.train_ui_btn = ctk.CTkButton(self.menu_container, text="NEURAL TRAINING", command=self.open_training_ui,
-                                          fg_color="#002222", hover_color="#004444", text_color="#00ffff", border_color="#00ffff", border_width=1)
+                                          fg_color="#002200", hover_color="#004400", text_color="#00ff00", border_color="#00ff00", border_width=1)
         self.train_ui_btn.pack(padx=15, pady=(10, 15))
         
         # State
@@ -262,7 +262,7 @@ class OverlayApp(ctk.CTk):
             self.save_config() # Save config on slider change
 
         slider = ctk.CTkSlider(self.settings_frame, from_=min_val, to=max_val, variable=variable, command=update_lbl,
-                               button_color="#00ffff", progress_color="#00ffff")
+                               button_color="#00ff00", progress_color="#00ff00")
         slider.pack(padx=10, pady=(0, 10))
 
     def toggle_hud(self):
@@ -309,23 +309,20 @@ class OverlayApp(ctk.CTk):
         else:
             self.training_window.focus()
 
-    def draw_bracket(self, x, y, w, h, length=20, color="#00ffff", thickness=2):
-        """Draws sci-fi corner brackets with NEON GLOW."""
-        glow_color = "#006666"
-        gt = thickness + 2
-        for c, t in [(glow_color, gt), (color, thickness)]:
-            self.canvas.create_line(x, y, x + length, y, fill=c, width=t)
-            self.canvas.create_line(x, y, x, y + length, fill=c, width=t)
-            self.canvas.create_line(x + w, y, x + w - length, y, fill=c, width=t)
-            self.canvas.create_line(x + w, y, x + w, y + length, fill=c, width=t)
-            self.canvas.create_line(x, y + h, x + length, y + h, fill=c, width=t)
-            self.canvas.create_line(x, y + h, x, y + h - length, fill=c, width=t)
-            self.canvas.create_line(x + w, y + h, x + w - length, y + h, fill=c, width=t)
-            self.canvas.create_line(x + w, y + h, x + w, y + h - length, fill=c, width=t)
+    def draw_bracket(self, x, y, w, h, length=20, color="#00ff00", thickness=2):
+        """Draws clean green corner brackets."""
+        self.canvas.create_line(x, y, x + length, y, fill=color, width=thickness)
+        self.canvas.create_line(x, y, x, y + length, fill=color, width=thickness)
+        self.canvas.create_line(x + w, y, x + w - length, y, fill=color, width=thickness)
+        self.canvas.create_line(x + w, y, x + w, y + length, fill=color, width=thickness)
+        self.canvas.create_line(x, y + h, x + length, y + h, fill=color, width=thickness)
+        self.canvas.create_line(x, y + h, x, y + h - length, fill=color, width=thickness)
+        self.canvas.create_line(x + w, y + h, x + w - length, y + h, fill=color, width=thickness)
+        self.canvas.create_line(x + w, y + h, x + w, y + h - length, fill=color, width=thickness)
 
     def draw_hud_elements(self, cx, cy):
         """Draws decorative HUD lines"""
-        color = "#00ffff"
+        color = "#00ff00"
         self.canvas.create_line(cx - 30, cy, cx - 10, cy, fill=color, width=1)
         self.canvas.create_line(cx + 10, cy, cx + 30, cy, fill=color, width=1)
         self.canvas.create_line(cx, cy - 30, cx, cy - 10, fill=color, width=1)
@@ -351,16 +348,16 @@ class OverlayApp(ctk.CTk):
         
         # Draw subtle panel background
         self.canvas.create_rectangle(panel_x - 10, panel_y - 10, panel_x + 220, panel_y + 160, 
-                                     fill="#000000", outline="#00ffff", stipple="gray50")
+                                     fill="#000000", outline="#00ff00", stipple="gray50")
 
-        self.canvas.create_text(panel_x, panel_y, text="AXION DIAGNOSTICS", fill="#00ffff", anchor="nw", font=("Orbitron", 10, "bold"))
-        self.canvas.create_text(panel_x, panel_y + 20, text=f"• STATUS: {self.engine_status}", fill="#ff00ff" if "ERROR" in self.engine_status else "#00ffff", anchor="nw", font=("Orbitron", 8))
+        self.canvas.create_text(panel_x, panel_y, text="AXION DIAGNOSTICS", fill="#00ff00", anchor="nw", font=("Orbitron", 10, "bold"))
+        self.canvas.create_text(panel_x, panel_y + 20, text=f"• STATUS: {self.engine_status}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
         
         if self.use_vision:
             device = "RTX Blackwell" if "NVIDIA" in str(self.vision.device) else "CPU/CoreML"
-            self.canvas.create_text(panel_x, panel_y + 35, text=f"• CORE DEVICE: {device}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
-            self.canvas.create_text(panel_x, panel_y + 50, text=f"• ENGINE FPS: {avg_fps:.1f}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
-            self.canvas.create_text(panel_x, panel_y + 65, text=f"• LATENCY: {self.vision.last_inference_time*1000:.1f}ms", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
+            self.canvas.create_text(panel_x, panel_y + 35, text=f"• CORE DEVICE: {device}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
+            self.canvas.create_text(panel_x, panel_y + 50, text=f"• ENGINE FPS: {avg_fps:.1f}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
+            self.canvas.create_text(panel_x, panel_y + 65, text=f"• LATENCY: {self.vision.last_inference_time*1000:.1f}ms", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
         else:
             self.canvas.create_text(panel_x, panel_y + 35, text="❌ VISION CORE INACTIVE", fill="#ff0000", anchor="nw", font=("Orbitron", 8))
 
@@ -369,10 +366,10 @@ class OverlayApp(ctk.CTk):
             try:
                 with open("training_progress.json", "r") as f:
                     p = json.load(f)
-                    self.canvas.create_text(panel_x, panel_y + 90, text="NEURAL TRAINING ACTIVE", fill="#00ffff", anchor="nw", font=("Orbitron", 10, "bold"))
-                    self.canvas.create_text(panel_x, panel_y + 110, text=f"• EPOCH: {p.get('epoch', '?')}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
-                    self.canvas.create_text(panel_x, panel_y + 125, text=f"• mAP50: {p.get('map50', 0):.3f}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
-                    self.canvas.create_text(panel_x, panel_y + 140, text=f"• LOSS: {p.get('loss', 0):.4f}", fill="#ff00ff", anchor="nw", font=("Orbitron", 8))
+                    self.canvas.create_text(panel_x, panel_y + 90, text="NEURAL TRAINING ACTIVE", fill="#00ff00", anchor="nw", font=("Orbitron", 10, "bold"))
+                    self.canvas.create_text(panel_x, panel_y + 110, text=f"• EPOCH: {p.get('epoch', '?')}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
+                    self.canvas.create_text(panel_x, panel_y + 125, text=f"• mAP50: {p.get('map50', 0):.3f}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
+                    self.canvas.create_text(panel_x, panel_y + 140, text=f"• LOSS: {p.get('loss', 0):.4f}", fill="#00ff00", anchor="nw", font=("Orbitron", 8))
             except:
                 pass
 
@@ -382,8 +379,8 @@ class OverlayApp(ctk.CTk):
 
         # Static Crosshair
         scx, scy = self.screen_width/2, self.screen_height/2
-        self.canvas.create_line(scx-5, scy, scx+5, scy, fill="#00ffff", width=1)
-        self.canvas.create_line(scx, scy-5, scx, scy+5, fill="#00ffff", width=1)
+        self.canvas.create_line(scx-5, scy, scx+5, scy, fill="#00ff00", width=1)
+        self.canvas.create_line(scx, scy-5, scx, scy+5, fill="#00ff00", width=1)
 
         # Draw Diagnostics & FPS
         self.draw_diagnostics()
@@ -392,7 +389,7 @@ class OverlayApp(ctk.CTk):
         # --- FOV CIRCLE (MAGNET RADIUS) ---
         if self.settings_visible or self.show_fov.get():
             r = self.magnet_radius.get()
-            color = "#00ffff" if not self.settings_visible else "#555555"
+            color = "#00ff00" if not self.settings_visible else "#333333"
             self.canvas.create_oval(scx - r, scy - r, scx + r, scy + r, outline=color, dash=(4, 4), width=1)
             
             # --- MASK VISUALIZATION (v0.5.0) ---
@@ -432,22 +429,22 @@ class OverlayApp(ctk.CTk):
             # VISUAL REFINE: Apply vertical offset to the HUD circle too
             cy += int(box_h * self.target_offset.get())
             
-            self.draw_bracket(x, y, box_w, box_h, length=min(box_w, box_h)//4, color="#00ffff")
+            self.draw_bracket(x, y, box_w, box_h, length=min(box_w, box_h)//4, color="#00ff00")
             self.draw_hud_elements(cx, cy)
             
             # --- HUD UPDATES ---
-            # Current Point (Pink)
-            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#ff00ff", outline="#00ffff", width=1)
+            # Current Point (Target)
+            self.canvas.create_oval(cx - 4, cy - 4, cx + 4, cy + 4, fill="#00ff00", outline="#004400", width=1)
             
-            # Prediction Path (Neon Ghost)
+            # Prediction Path (Ghost)
             if self.prediction_factor.get() > 0:
-                self.canvas.create_line(cx, cy, px, py, fill="#00ffff", dash=(2, 2))
-                self.canvas.create_oval(px - 3, py - 3, px + 3, py + 3, outline="#ff00ff", width=2)
-                self.canvas.create_text(px + 5, py + 5, text="PRED", fill="#ff00ff", font=("Orbitron", 8))
+                self.canvas.create_line(cx, cy, px, py, fill="#00ff00", dash=(2, 2))
+                self.canvas.create_oval(px - 3, py - 3, px + 3, py + 3, outline="#00ff00", width=2)
+                self.canvas.create_text(px + 5, py + 5, text="PRED", fill="#00ff00", font=("Orbitron", 8))
 
-            self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ffff", anchor="nw", font=("Orbitron", 12, "bold"))
-            self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
-            self.canvas.create_text(x + box_w + 10, y + 35, text=f"LAT: {self.vision.last_inference_time*1000:.1f}ms", fill="#ff00ff", anchor="nw", font=("Orbitron", 9))
+            self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ff00", anchor="nw", font=("Orbitron", 12, "bold"))
+            self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ff00", anchor="nw", font=("Orbitron", 10))
+            self.canvas.create_text(x + box_w + 10, y + 35, text=f"LAT: {self.vision.last_inference_time*1000:.1f}ms", fill="#00ff00", anchor="nw", font=("Orbitron", 9))
 
             # Combat Logic
             if self.mouse_control_var.get():
@@ -465,7 +462,7 @@ class OverlayApp(ctk.CTk):
                         smooth = self.magnet_smooth.get()
                     
                     move_mouse_to(aim_x, aim_y, smooth_factor=smooth, humanization=self.humanization.get())
-                    self.canvas.create_text(scx, 50, text="MAGNETIC LOCK ENGAGED", fill="#ff00ff", font=("Orbitron", 24, "bold"))
+                    self.canvas.create_text(scx, 50, text="MAGNETIC LOCK ENGAGED", fill="#00ff00", font=("Orbitron", 24, "bold"))
                 except Exception as e: print(f"Mouse Error: {e}")
         
         self.after(10, self.update_overlay)
