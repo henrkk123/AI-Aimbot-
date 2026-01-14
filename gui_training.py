@@ -305,7 +305,24 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
             
             model = YOLO(base_model) # Load selected model
             
-            self.log("Starting training process... (Check terminal for detailed progress)")
+            # --- PROGRESS EXPORT CALLBACK (v0.6.4) ---
+            import json
+            def on_train_epoch_end(trainer):
+                try:
+                    stats = {
+                        "epoch": trainer.epoch + 1,
+                        "epochs": trainer.epochs,
+                        "map50": trainer.metrics.get('metrics/mAP50(B)', 0),
+                        "loss": trainer.loss.item() if hasattr(trainer, 'loss') else 0
+                    }
+                    with open("training_progress.json", "w") as f:
+                        json.dump(stats, f)
+                except:
+                    pass
+            
+            model.add_callback("on_train_epoch_end", on_train_epoch_end)
+            
+            self.log("Starting training process... (Check HUD for live diagnostics)")
             
             # Run training
             results = model.train(
@@ -326,6 +343,10 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         except Exception as e:
             self.log(f"❌ CRITICAL ERROR: {str(e)}")
             self.log("Tip: If Out Of Memory (OOM), close other apps or reduce batch size.")
+        finally:
+            if os.path.exists("training_progress.json"):
+                try: os.remove("training_progress.json")
+                except: pass
         
         self.training_active = False
         self.train_btn.configure(text="START REAL TRAINING", state="normal", fg_color="#004400")

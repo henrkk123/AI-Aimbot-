@@ -24,6 +24,12 @@ class OverlayApp(ctk.CTk):
         self.config_path = "config.json"
         self.load_config()
 
+        # --- PERFORMANCE TRACKING ---
+        import time
+        self.last_update_time = time.time()
+        self.fps_list = []
+        self.inference_latency = 0.0
+
         # --- VISION ENGINE SETUP ---
         try:
             from vision_engine import VisionEngine
@@ -31,9 +37,12 @@ class OverlayApp(ctk.CTk):
             self.vision.conf_threshold = self.conf_threshold.get()
             self.vision.sticky_radius = self.magnet_radius.get()
             self.use_vision = True
+            self.engine_status = "ACTIVE"
         except Exception as e:
             print(f"Error loading VisionEngine: {e}")
             self.use_vision = False
+            self.engine_status = "ERROR: VISION CORE FAILED"
+            self.engine_error = str(e)
 
         # Window setup
         self.title("Neural Edge Overlay")
@@ -322,6 +331,51 @@ class OverlayApp(ctk.CTk):
         self.canvas.create_line(cx, cy - 30, cx, cy - 10, fill=color, width=1)
         self.canvas.create_line(cx, cy + 10, cx, cy + 30, fill=color, width=1)
 
+    def draw_diagnostics(self):
+        """Draws real-time engine statistics (NO SIMULATION)"""
+        import time
+        scx, scy = self.screen_width/2, self.screen_height/2
+        
+        # Calculate FPS
+        now = time.time()
+        dt = now - self.last_update_time
+        self.last_update_time = now
+        fps = 1.0 / dt if dt > 0 else 0
+        self.fps_list.append(fps)
+        if len(self.fps_list) > 20: self.fps_list.pop(0)
+        avg_fps = sum(self.fps_list) / len(self.fps_list)
+
+        # Performance Stats (Top Right)
+        panel_x = self.screen_width - 250
+        panel_y = 50
+        
+        # Draw subtle panel background
+        self.canvas.create_rectangle(panel_x - 10, panel_y - 10, panel_x + 220, panel_y + 160, 
+                                     fill="#000000", outline="#00ffff", stipple="gray50")
+
+        self.canvas.create_text(panel_x, panel_y, text="AXION DIAGNOSTICS", fill="#00ffff", anchor="nw", font=("Orbitron", 10, "bold"))
+        self.canvas.create_text(panel_x, panel_y + 20, text=f"• STATUS: {self.engine_status}", fill="#ff00ff" if "ERROR" in self.engine_status else "#00ffff", anchor="nw", font=("Orbitron", 8))
+        
+        if self.use_vision:
+            device = "RTX Blackwell" if "NVIDIA" in str(self.vision.device) else "CPU/CoreML"
+            self.canvas.create_text(panel_x, panel_y + 35, text=f"• CORE DEVICE: {device}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
+            self.canvas.create_text(panel_x, panel_y + 50, text=f"• ENGINE FPS: {avg_fps:.1f}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
+            self.canvas.create_text(panel_x, panel_y + 65, text=f"• LATENCY: {self.vision.last_inference_time*1000:.1f}ms", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
+        else:
+            self.canvas.create_text(panel_x, panel_y + 35, text="❌ VISION CORE INACTIVE", fill="#ff0000", anchor="nw", font=("Orbitron", 8))
+
+        # Check for Training Progress (if file exists)
+        if os.path.exists("training_progress.json"):
+            try:
+                with open("training_progress.json", "r") as f:
+                    p = json.load(f)
+                    self.canvas.create_text(panel_x, panel_y + 90, text="NEURAL TRAINING ACTIVE", fill="#00ffff", anchor="nw", font=("Orbitron", 10, "bold"))
+                    self.canvas.create_text(panel_x, panel_y + 110, text=f"• EPOCH: {p.get('epoch', '?')}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
+                    self.canvas.create_text(panel_x, panel_y + 125, text=f"• mAP50: {p.get('map50', 0):.3f}", fill="#00ffff", anchor="nw", font=("Orbitron", 8))
+                    self.canvas.create_text(panel_x, panel_y + 140, text=f"• LOSS: {p.get('loss', 0):.4f}", fill="#ff00ff", anchor="nw", font=("Orbitron", 8))
+            except:
+                pass
+
     def update_overlay(self):
         """Main loop to update the visualization."""
         self.canvas.delete("all")
@@ -330,6 +384,9 @@ class OverlayApp(ctk.CTk):
         scx, scy = self.screen_width/2, self.screen_height/2
         self.canvas.create_line(scx-5, scy, scx+5, scy, fill="#00ffff", width=1)
         self.canvas.create_line(scx, scy-5, scx, scy+5, fill="#00ffff", width=1)
+
+        # Draw Diagnostics & FPS
+        self.draw_diagnostics()
 
         # Show Magnet Radius while tuning
         # --- FOV CIRCLE (MAGNET RADIUS) ---
@@ -343,7 +400,7 @@ class OverlayApp(ctk.CTk):
             mh = self.mask_height.get()
             if mw > 0 or mh > 0:
                 # Calculate mask box (Same logic as vision_engine)
-                roi_size = self.vision.roi_size
+                roi_size = self.vision.roi_size if self.use_vision else 640
                 m_px_w = roi_size * mw
                 m_px_h = roi_size * mh
                 
@@ -367,12 +424,8 @@ class OverlayApp(ctk.CTk):
                 x, y, box_w, box_h, confidence, px, py = target # Unpack predicted coordinates
                 detected = True
         else:
-            # Fallback to simulation
-            w, h = 640, 640 # Dummy ROI
-            x, y, box_w, box_h = generate_dummy_data(self.screen_width, self.screen_height)
-            px, py = calculate_centroid(x, y, box_w, box_h) # For simulation, prediction is just centroid
-            detected = True
-            confidence = random.uniform(0.8, 0.99)
+            # NO MORE SIMULATION. If vision fails, the user sees nothing but diagnostic error.
+            pass
 
         if detected:
             cx, cy = calculate_centroid(x, y, box_w, box_h)
@@ -394,6 +447,7 @@ class OverlayApp(ctk.CTk):
 
             self.canvas.create_text(x + box_w + 10, y, text="► NEURAL LOCK", fill="#00ffff", anchor="nw", font=("Orbitron", 12, "bold"))
             self.canvas.create_text(x + box_w + 10, y + 20, text=f"PROB: {confidence:.2%}", fill="#00ffff", anchor="nw", font=("Orbitron", 10))
+            self.canvas.create_text(x + box_w + 10, y + 35, text=f"LAT: {self.vision.last_inference_time*1000:.1f}ms", fill="#ff00ff", anchor="nw", font=("Orbitron", 9))
 
             # Combat Logic
             if self.mouse_control_var.get():

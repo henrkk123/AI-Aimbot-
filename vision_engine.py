@@ -80,6 +80,7 @@ class VisionEngine:
         self.lock_stability = 0.5    # 0.0 to 1.0 (Higher = harder to switch targets)
         self.mask_width = 0.0        # v0.5.0: Width of self-mask (0-1 range)
         self.mask_height = 0.0       # v0.5.0: Height of self-mask (0-1 range)
+        self.last_inference_time = 0.0 # v0.6.4 performance tracking
 
     def capture_screen(self):
         """
@@ -123,7 +124,9 @@ class VisionEngine:
         t_start = time.time()
         frame = self.capture_screen()
         
+        t_inf_start = time.time()
         results = self.model(frame, stream=True, verbose=False, conf=conf_threshold, device=self.device)
+        self.last_inference_time = time.time() - t_inf_start
         
         best_box = None
         max_score = 0.0
