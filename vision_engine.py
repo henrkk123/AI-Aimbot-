@@ -106,6 +106,20 @@ class VisionEngine:
                 cx = global_x1 + w // 2
                 cy = global_y1 + h // 2
                 
+                # --- PLAYER DEADZONE FILTER ---
+                # Fortnite/3rd Person: Player is Bottom Center.
+                # ROI is 640x640. Center is 320,320.
+                # Rel Y > 320 (Bottom half) AND Rel X within 100px of center.
+                
+                rel_x = cx - self.roi_left
+                rel_y = cy - self.roi_top
+                
+                # Config: Bottom 50% height, Center 25% width
+                if rel_y > (self.roi_size * 0.55): # Slightly below center
+                     if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.15):
+                         # print("👻 Ignored Player")
+                         continue 
+                
                 # Score = Conf + Sticky Bonus
                 score = confidence
                 if self.last_target_center:
