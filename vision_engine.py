@@ -51,6 +51,9 @@ class VisionEngine:
         print(f"🎯 Vision ROI Set: {roi_size}x{roi_size} at ({self.roi_left}, {self.roi_top})")
         self.lock = threading.Lock()
         
+        # Tracking Memory for Sticky Logic
+        self.last_target_center = None
+        
     def capture_screen(self):
         """
         Captures the defined ROI.
@@ -81,26 +84,42 @@ class VisionEngine:
         # but we let ultralytics handle the defaults for stability unless explicit speedup is needed.
         
         best_box = None
-        max_conf = 0.0
+        max_score = 0.0
+        best_center = None
         
         for r in results:
             boxes = r.boxes
             for box in boxes:
                 confidence = float(box.conf[0])
-                if confidence > max_conf:
-                    max_conf = confidence
-                    x1, y1, x2, y2 = box.xyxy[0]
-                    
-                    # Offset local ROI coordinates to Global Screen coordinates
-                    global_x1 = int(x1) + self.roi_left
-                    global_y1 = int(y1) + self.roi_top
-                    global_x2 = int(x2) + self.roi_left
-                    global_y2 = int(y2) + self.roi_top
-                    
-                    w = global_x2 - global_x1
-                    h = global_y2 - global_y1
-                    
-                    # Returns top-left x,y for drawing
+                
+                # Get Coords
+                x1, y1, x2, y2 = box.xyxy[0]
+                global_x1 = int(x1) + self.roi_left
+                global_y1 = int(y1) + self.roi_top
+                global_x2 = int(x2) + self.roi_left
+                global_y2 = int(y2) + self.roi_top
+                
+                w = global_x2 - global_x1
+                h = global_y2 - global_y1
+                
+                # Center
+                cx = global_x1 + w // 2
+                cy = global_y1 + h // 2
+                
+                # Score = Conf + Sticky Bonus
+                score = confidence
+                if self.last_target_center:
+                    lcx, lcy = self.last_target_center
+                    dist = np.hypot(cx - lcx, cy - lcy)
+                    if dist < 100: # 100px Sticky Radius
+                        score += 0.3 # BIG BONUS to keep lock
+                
+                if score > max_score:
+                    max_score = score
                     best_box = (global_x1, global_y1, w, h, confidence)
+                    best_center = (cx, cy)
+        
+        # Update memory
+        self.last_target_center = best_center
                     
         return best_box
