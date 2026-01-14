@@ -136,19 +136,27 @@ class OverlayApp(ctk.CTk):
         self.settings_visible = False
         self.settings_frame = ctk.CTkFrame(self.menu_container, fg_color="#141414", corner_radius=10)
         
-        # Sliders
-        self.create_slider("Smoothing (Long Range)", self.smooth_factor, 0.01, 1.0)
+        # Sliders Organized into Groups
+        # --- COMBAT GROUP ---
+        self.create_group_label("--- AIMBOT & MOVEMENT ---")
+        self.create_slider("Smoothing (Long)", self.smooth_factor, 0.01, 1.0)
         self.create_slider("Magnet Smooth (Snap)", self.magnet_smooth, 0.01, 1.0)
         self.create_slider("Magnet Radius (px)", self.magnet_radius, 10, 500)
-        self.create_slider("Conf Threshold", self.conf_threshold, 0.1, 1.0)
-        self.create_slider("Target Offset (Head-Chest)", self.target_offset, -0.5, 0.5)
-        self.create_slider("Prediction Intensity (Leading)", self.prediction_factor, 0.0, 5.0)
-        self.create_slider("Humanization (Stealth)", self.humanization, 0.0, 1.0)
-        self.create_slider("Lock Stability (Priority)", self.lock_stability, 0.0, 1.0)
+        self.create_slider("Target Offset", self.target_offset, -0.5, 0.5)
+        self.create_slider("Humanization", self.humanization, 0.0, 1.0)
         
-        # v0.5.0: Mask Sliders
-        self.create_slider("Smart Mask Width", self.mask_width, 0.0, 0.5)
-        self.create_slider("Smart Mask Height", self.mask_height, 0.0, 0.8)
+        # --- VISION GROUP ---
+        self.create_group_label("--- VISION CORE ---")
+        self.create_slider("Conf Threshold", self.conf_threshold, 0.1, 1.0)
+        self.create_slider("Predict Intensity", self.prediction_factor, 0.0, 5.0)
+        self.create_slider("Lock Stability", self.lock_stability, 0.0, 1.0)
+        
+        # --- MASK GROUP ---
+        self.create_group_label("--- SMART MASK ---")
+        self.create_slider("Mask Width", self.mask_width, 0.0, 0.5)
+        self.create_slider("Mask Height", self.mask_height, 0.0, 0.8)
+        self.create_slider("Mask X Shift", self.mask_x_offset, -1.0, 1.0)
+        self.create_slider("Mask Y Shift", self.mask_y_offset, -1.0, 1.0)
 
         self.train_ui_btn = ctk.CTkButton(self.menu_container, text="NEURAL TRAINING", command=self.open_training_ui,
                                           fg_color="#002200", hover_color="#004400", text_color="#00ff00", border_color="#00ff00", border_width=1)
@@ -196,10 +204,13 @@ class OverlayApp(ctk.CTk):
             "magnet_smooth": 0.8,
             "magnet_radius": 50,
             "conf_threshold": 0.5,
-            "target_offset": -0.2, # Default slightly above center (Chest/Neck)
             "prediction_factor": 1.0, # New Prediction setting
             "humanization": 0.2,     # v0.4.0
             "lock_stability": 0.5,   # v0.4.0
+            "mask_width": 0.0,
+            "mask_height": 0.0,
+            "mask_x_offset": 0.0,
+            "mask_y_offset": 0.5,
             "combat_mode": False
         }
         
@@ -220,6 +231,8 @@ class OverlayApp(ctk.CTk):
         self.lock_stability = ctk.DoubleVar(value=defaults["lock_stability"])
         self.mask_width = ctk.DoubleVar(value=defaults.get("mask_width", 0.0))    
         self.mask_height = ctk.DoubleVar(value=defaults.get("mask_height", 0.0))  
+        self.mask_x_offset = ctk.DoubleVar(value=defaults.get("mask_x_offset", 0.0))
+        self.mask_y_offset = ctk.DoubleVar(value=defaults.get("mask_y_offset", 0.5))
         self.show_fov = ctk.BooleanVar(value=defaults.get("show_fov", True)) # v0.5.1
         self.mouse_control_var = ctk.BooleanVar(value=defaults["combat_mode"])
 
@@ -235,6 +248,8 @@ class OverlayApp(ctk.CTk):
             "lock_stability": self.lock_stability.get(),
             "mask_width": self.mask_width.get(),
             "mask_height": self.mask_height.get(),
+            "mask_x_offset": self.mask_x_offset.get(),
+            "mask_y_offset": self.mask_y_offset.get(),
             "show_fov": self.show_fov.get(),
             "combat_mode": self.mouse_control_var.get()
         }
@@ -257,13 +272,19 @@ class OverlayApp(ctk.CTk):
                 self.vision.target_offset = self.target_offset.get()
                 self.vision.prediction_factor = self.prediction_factor.get()
                 self.vision.lock_stability = self.lock_stability.get()
-                self.vision.mask_width = self.mask_width.get()   # v0.5.0
-                self.vision.mask_height = self.mask_height.get() # v0.5.0
+                self.vision.mask_width = self.mask_width.get()
+                self.vision.mask_height = self.mask_height.get()
+                self.vision.mask_x_offset = self.mask_x_offset.get()
+                self.vision.mask_y_offset = self.mask_y_offset.get()
             self.save_config() # Save config on slider change
 
         slider = ctk.CTkSlider(self.settings_frame, from_=min_val, to=max_val, variable=variable, command=update_lbl,
-                               button_color="#00ff00", progress_color="#00ff00")
+                               button_color="#00ff00", progress_color="#00ff00", height=15)
         slider.pack(padx=10, pady=(0, 10))
+
+    def create_group_label(self, text):
+        lbl = ctk.CTkLabel(self.settings_frame, text=text, text_color="#00ff00", font=("Orbitron", 10, "bold"))
+        lbl.pack(padx=10, pady=(10, 5))
 
     def toggle_hud(self):
         if self.hud_minimized:
@@ -393,14 +414,18 @@ class OverlayApp(ctk.CTk):
                 m_px_w = roi_size * mw
                 m_px_h = roi_size * mh
                 
-                x1 = scx - m_px_w // 2
-                y1 = scy - m_px_h // 2 # Centered for visual feedback
-                x2 = scx + m_px_w // 2
-                y2 = scy + m_px_h // 2
+                # Visual center in overlay matches ROI center
+                mx_shift = (roi_size // 2) * self.mask_x_offset.get()
+                my_shift = (roi_size // 2) * self.mask_y_offset.get()
+                
+                x1 = scx + mx_shift - m_px_w // 2
+                y1 = scy + my_shift - m_px_h // 2
+                x2 = scx + mx_shift + m_px_w // 2
+                y2 = scy + my_shift + m_px_h // 2
                 
                 # Draw semi-transparent red box for tuning
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill="#ff0000", stipple="gray25", outline="#ff0000")
-                self.canvas.create_text(scx, y1 - 10, text="SELF-MASKING AREA", fill="#ff0000", font=("Orbitron", 8))
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill="#ff0000", stipple="gray25", outline="#ff0000", width=1)
+                self.canvas.create_text(x1, y1 - 10, text="MASK ACTIVE", fill="#ff0000", font=("Orbitron", 8), anchor="sw")
             
         x, y, box_w, box_h = 0, 0, 0, 0
         px, py = 0, 0 # Predicted coordinates

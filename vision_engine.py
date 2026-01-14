@@ -80,6 +80,8 @@ class VisionEngine:
         self.lock_stability = 0.5    # 0.0 to 1.0 (Higher = harder to switch targets)
         self.mask_width = 0.0        # v0.5.0: Width of self-mask (0-1 range)
         self.mask_height = 0.0       # v0.5.0: Height of self-mask (0-1 range)
+        self.mask_x_offset = 0.0     # v0.7.3: Lateral shift (-1 to 1)
+        self.mask_y_offset = 0.5     # v0.7.3: Vertical shift (-1 to 1)
         self.last_inference_time = 0.0 # v0.6.4 performance tracking
 
     def capture_screen(self):
@@ -96,18 +98,20 @@ class VisionEngine:
         img = np.array(screenshot)
         frame = cv2.cvtColor(img, cv2.COLOR_BGRA2RGB)
         
-        # --- SMART MASKING (v0.5.0) ---
+        # --- SMART MASKING (v0.5.0+) ---
         if self.mask_width > 0 or self.mask_height > 0:
             h, w = frame.shape[:2]
             mw = int(w * self.mask_width)
             mh = int(h * self.mask_height)
             
-            # Draw black box in center-bottom area (typical 3rd person player position)
-            # Default center: w//2, h//2.
-            x1 = max(0, w // 2 - mw // 2)
-            y1 = max(0, int(h * 0.5) - mh // 2) # Start slightly higher than bottom
-            x2 = min(w, w // 2 + mw // 2)
-            y2 = min(h, h) # Go all the way to bottom
+            # Center point based on offsets
+            cx = int(w // 2 + (w // 2) * self.mask_x_offset)
+            cy = int(h // 2 + (h // 2) * self.mask_y_offset)
+            
+            x1 = max(0, cx - mw // 2)
+            y1 = max(0, cy - mh // 2)
+            x2 = min(w, cx + mw // 2)
+            y2 = min(h, cy + mh // 2)
             
             frame[y1:y2, x1:x2] = (0, 0, 0) # Black out
             
