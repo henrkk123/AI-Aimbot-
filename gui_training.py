@@ -55,12 +55,18 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 pass
                 
             device = "CPU"
+            is_good = False
             if torch.cuda.is_available():
                 device = f"NVIDIA GPU ({torch.cuda.get_device_name(0)})"
+                is_good = True
             elif torch.backends.mps.is_available():
                 device = "APPLE SILICON (MPS)"
+                is_good = True
                 
             print(f"✅ Environment OK. Device: {device}")
+            if not is_good:
+                print("⚠️ WARNING: RUNNING ON CPU. TRAINING WILL BE SLOW.")
+                print("👉 Use 'install_gpu.bat' to enable your RTX card.")
             # We can't update UI here easily as it's init, but print is good.
         except ImportError as e:
             print(f"❌ CRITICAL MISSING LIB: {e}")
@@ -77,8 +83,10 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         
         # Params
         self.epochs_entry = ctk.CTkEntry(self.left_panel, placeholder_text="Epochs (e.g. 50)")
-        self.epochs_entry.insert(0, "10")
+        self.epochs_entry.insert(0, "50")
         self.epochs_entry.pack(pady=5, padx=20, fill="x")
+        
+        ctk.CTkLabel(self.left_panel, text="Recommended: 50-100+", text_color="gray", font=("Arial", 10)).pack(pady=(0, 10))
         
         # Right: Output
         self.right_panel = ctk.CTkFrame(self.grid_frame, fg_color="#1a1a1a", corner_radius=10, border_width=1, border_color="#333")
