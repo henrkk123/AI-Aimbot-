@@ -11,6 +11,10 @@
 
 <br />
 
+<!-- PLACEHOLDER FOR DEMO GIF -->
+<!-- Replace 'demo.gif' with your actual recorded gameplay! -->
+![CV-Overlay Demo](https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3R6eW55b3Z6eW55b3Z6eW55b3Z6eW55b3Z6eW55b3Z6eW55b3Z6/xT9IgzoKnwFNmISR8I/giphy.gif)
+
 **Zero Latency. Liquid Glass UI. GPU Accelerated.**
 <br />
 A hybrid computer vision overlay designed for high-refresh-rate gaming.

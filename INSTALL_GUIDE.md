@@ -1,97 +1,95 @@
-# 📦 CV-Overlay Installation Guide
+# 🎮 The Ultimate Guide to CV-Overlay Pro
 
-Welcome! This guide will help you set up the **CV-Overlay Pro** system from scratch.
+Welcome to the **CV-Overlay Pro** ecosystem. This guide will take you from "Zero" to "Hero" in about 5 minutes.
 
----
-
-## 🏗️ 1. Install Prerequisites
-
-Before you begin, ensure you have the following installed on your machine.
-
-### A. Python (The Brain)
--   **Requirement**: Python 3.10 or newer.
--   **Verification**: Open a terminal and type:
-    ```bash
-    python --version
-    ```
--   **Download**: [python.org](https://www.python.org/downloads/)
-
-### B. Node.js (The UI)
--   **Requirement**: Node.js 18.0 or newer.
--   **Verification**:
-    ```bash
-    node -v
-    npm -v
-    ```
--   **Download**: [nodejs.org](https://nodejs.org/)
+> **Difficulty**: Beginner 🟢
+> **Time**: ~5 Mins ⏱️
 
 ---
 
-## ⚡ 2. Setup the Project
+## 🏗️ Phase 1: The Foundation (Prerequisites)
 
-### step 1: Clone or Unzip
-If you haven't already, download this folder to your computer.
+Before we can run high-end AI, we need the basics.
 
-### step 2: Python Backend Setup
-We need to install the AI libraries (YOLO, FastAPI, etc.).
+### 1. Install Python (The Brain)
+We need Python 3.10 or newer.
+1.  Go to [python.org/downloads](https://www.python.org/downloads/).
+2.  **Vital Step for Windows**: Check the box **"Add Python to PATH"** in the installer.
+3.  Install it.
 
-1.  Open your **Terminal** or **Command Prompt** in the project folder.
-2.  Create a virtual environment (recommended):
-    ```bash
-    python -m venv .venv
-    ```
-3.  Activate it:
-    *   **Mac/Linux**: `source .venv/bin/activate`
-    *   **Windows**: `.venv\Scripts\activate`
-4.  Install dependencies:
-    ```bash
-    pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
-    ```
+### 2. Install Node.js (The Graphics)
+We need Node to run the "Liquid Glass" UI.
+1.  Go to [nodejs.org](https://nodejs.org/).
+2.  Download the **LTS Version** (Recommended).
+3.  Install it with default settings.
 
-### Step 3: UI Frontend Setup
-We need to install the liquid-glass interface libraries.
+---
 
-1.  Navigate to the UI folder:
-    ```bash
-    cd overlay-ui
-    ```
-2.  Install packages:
+## ⬇️ Phase 2: Setup The Project
+
+### 1. Open the Terminal
+*   **Mac**: Press `Cmd + Space`, type "Terminal", hit Enter.
+*   **Windows**: Press `Start`, type "cmd", open Command Prompt.
+
+### 2. Install Key Dependencies
+Copy and paste this command to install the AI libraries:
+
+```bash
+pip install ultralytics fastapi uvicorn[standard] websockets pynput pyautogui mss opencv-python
+```
+
+*Wait for it to finish...*
+
+### 3. Install UI Dependencies
+Now we prepare the beautiful interface.
+1.  Navigate into the `overlay-ui` folder:
+    *   *(If you are in the root folder)*: `cd overlay-ui`
+2.  Run the installer:
     ```bash
     npm install
     ```
-3.  Go back to the root:
+3.  Go back:
     ```bash
     cd ..
     ```
 
 ---
 
-## 🚀 3. Launching the App
+## 🚀 Phase 3: Launch!
 
-### The Easy Way
--   **Mac**: Double-Click `start_overlay.command`.
--   **Windows**: Double-Click `start_overlay.bat`.
+You made it. Now let's start the engine.
 
-### The Manual Way
-If you prefer terminal control:
-1.  **Start the Backend**:
-    ```bash
-    python server.py
-    ```
-2.  **Start the UI** (New Terminal):
-    ```bash
-    cd overlay-ui
-    npm run electron
-    ```
+### For Mac 🍎
+simply **Double-Click** the file named:
+> **`start_overlay.command`**
+
+### For Windows 🪟
+simply **Double-Click** the file named:
+> **`start_overlay.bat`**
 
 ---
 
-## 🛠️ Troubleshooting
+## 🎮 How to Play
 
--   **"Module Not Found"**: Ensure you activated your `.venv` before running python.
--   **Overlay is Black/Not Transparent**:
-    -   *Windows*: Ensure Aero/Transparency effects are enabled in Windows Settings.
-    -   *Mac*: Ensure you are not in strict full-screen mode for some apps; windowed modes work best.
--   **"Command not found"**: Ensure Python and Node are added to your system PATH during installation.
+1.  **The Overlay**: It will appear as a transparent glass layer over your screen.
+2.  **Status**: Look for "VISION ENGINE: ONLINE" in the top corner.
+3.  **Combat Mode**: Press **`0` (Zero)** on your keyboard to toggle Aim Assist.
+    *   *Green Glow*: Assist Active.
+    *   *Red/No Glow*: Passive Mode.
 
-**Enjoy your new high-perforamnce overlay!** 🎯
+### Pro Tips 💡
+*   **Game Mode**: Run your game in **Borderless Window** or **Windowed Fullscreen**. Exclusive Fullscreen might hide the overlay.
+*   **Training**: Want to teach it new targets? Run the `train_model` script!
+
+---
+
+## 🆘 Troubleshooting
+
+**"Command not found" error?**
+> You didn't add Python or Node to your PATH/Environment Variables during installation. Re-install them and check the boxes!
+
+**Overlay is black?**
+> Make sure your game is **NOT** in Exclusive Fullscreen.
+
+**"UI Dependencies not found"?**
+> You skipped Phase 2, Step 3 (`npm install`). Go do it!
