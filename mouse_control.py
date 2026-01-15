@@ -28,10 +28,19 @@ def move_mouse_to(target_x, target_y, smooth_factor=0.3, humanization=0.0):
         dx = int(dx_raw * smooth_factor)
         dy = int(dy_raw * smooth_factor)
         
+        # --- SNIPER PRECISION (v0.8.0) ---
+        # Force a minimum 1-pixel move if smoothing would otherwise stop the movement.
+        # This prevents the mouse from 'getting stuck' near the target.
+        if dx == 0 and dx_raw != 0:
+            dx = 1 if dx_raw > 0 else -1
+        if dy == 0 and dy_raw != 0:
+            dy = 1 if dy_raw > 0 else -1
+            
         # --- HUMANIZATION (Stealth Jitter) ---
-        if humanization > 0 and (abs(dx) > 1 or abs(dy) > 1):
-            jitter_x = random.uniform(-humanization * 5, humanization * 5)
-            jitter_y = random.uniform(-humanization * 5, humanization * 5)
+        # Only jitter if we are moving significantly to avoid glitching at close range
+        if humanization > 0 and (abs(dx_raw) > 20 or abs(dy_raw) > 20):
+            jitter_x = random.uniform(-humanization * 3, humanization * 3)
+            jitter_y = random.uniform(-humanization * 3, humanization * 3)
             dx = int(dx + jitter_x)
             dy = int(dy + jitter_y)
 

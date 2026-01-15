@@ -153,8 +153,8 @@ class OverlayApp(ctk.CTk):
         
         # --- MASK GROUP ---
         self.create_group_label("--- SMART MASK ---")
-        self.create_slider("Mask Width", self.mask_width, 0.0, 0.5)
-        self.create_slider("Mask Height", self.mask_height, 0.0, 0.8)
+        self.create_slider("Mask Width", self.mask_width, 0.0, 1.0)
+        self.create_slider("Mask Height", self.mask_height, 0.0, 1.0)
         self.create_slider("Mask X Shift", self.mask_x_offset, -1.0, 1.0)
         self.create_slider("Mask Y Shift", self.mask_y_offset, -1.0, 1.0)
 
@@ -200,7 +200,7 @@ class OverlayApp(ctk.CTk):
     def load_config(self):
         # Default values
         defaults = {
-            "smooth_factor": 0.3,
+            "smooth_factor": 0.4,    # v0.8.0: Tuned for snappiness
             "magnet_smooth": 0.8,
             "magnet_radius": 50,
             "conf_threshold": 0.5,
@@ -412,13 +412,14 @@ class OverlayApp(ctk.CTk):
             if mw > 0 or mh > 0:
                 # Calculate mask box (Same logic as vision_engine)
                 roi_size = self.vision.roi_size if self.use_vision else 640
-                m_px_w = roi_size * mw
-                m_px_h = roi_size * mh
+                m_px_w = int(roi_size * mw)
+                m_px_h = int(roi_size * mh)
                 
                 # Visual center in overlay matches ROI center
-                mx_shift = (roi_size // 2) * self.mask_x_offset.get()
-                my_shift = (roi_size // 2) * self.mask_y_offset.get()
+                mx_shift = int((roi_size // 2) * self.mask_x_offset.get())
+                my_shift = int((roi_size // 2) * self.mask_y_offset.get())
                 
+                # Clamp boundaries for overlay drawing
                 x1 = scx + mx_shift - m_px_w // 2
                 y1 = scy + my_shift - m_px_h // 2
                 x2 = scx + mx_shift + m_px_w // 2
@@ -426,7 +427,7 @@ class OverlayApp(ctk.CTk):
                 
                 # Draw semi-transparent red box for tuning
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill="#ff0000", stipple="gray25", outline="#ff0000", width=1)
-                self.canvas.create_text(x1, y1 - 10, text="MASK ACTIVE", fill="#ff0000", font=("Orbitron", 8), anchor="sw")
+                self.canvas.create_text(x1 + 5, y1 + 5, text=f"ULTRA MASK: {mw:.0%}x{mh:.0%}", fill="#ff0000", font=("Orbitron", 8), anchor="nw")
             
         x, y, box_w, box_h = 0, 0, 0, 0
         px, py = 0, 0 # Predicted coordinates
