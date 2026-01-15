@@ -285,6 +285,9 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         
         try:
             # --- ISOLATED COMPUTE INITIALIZATION ---
+            os.environ["ULTRALYTICS_CHECK"] = "False" # Fix hang on update check
+            os.environ["YOLO_VERBOSE"] = "False"      # Keep logs clean
+            
             if device_mode == "CPU":
                  os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
                  self.log("🚫 Hiding GPU to ensure stable CPU computation.")
@@ -331,11 +334,12 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 imgsz=640, 
                 device=device,
                 plots=True,
-                batch=32,           # Increased for RTX 5070 (Higher memory throughput)
-                cache='ram',        # Cache 16k images in RAM for instant access after Epoch 1
-                workers=8,          # Faster data loading (Adjust to CPU cores)
-                persistent_workers=True, # Keeps workers alive between epochs
-                amp=True,           # Automatic Mixed Precision (Blackwell specialty)
+                batch=32,           # Optimized for RTX 5070
+                cache=True,         # Auto-cache (safer than 'ram' for 16k images)
+                workers=4,          # Lowered for Windows stability
+                persistent_workers=True,
+                amp=True,           # Blackwell specialty
+                exist_ok=True,      # Prevent permission errors on retry
                 save=True
             )
             
