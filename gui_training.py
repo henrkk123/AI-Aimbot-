@@ -272,10 +272,7 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.console_out.see("end")
 
     def start_training_thread(self):
-        # Prepare Data
-        self.yaml_path = self.prepare_merged_dataset()
-        
-        if not self.yaml_path:
+        if not self.dataset_paths:
             self.log("❌ ERROR: Please select at least one dataset.")
             return
             
@@ -292,14 +289,22 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         except:
             pass
             
-        # Start in thread
-        # Start in thread
         selected_device = self.device_var.get()
-        t = threading.Thread(target=self.run_yolo_train, args=(self.yaml_path, epochs, self.base_model_path, selected_device))
+        # Start in thread - passing dataset paths directly to be handled in the worker
+        t = threading.Thread(target=self.run_yolo_train, args=(epochs, self.base_model_path, selected_device))
         t.start()
 
-    def run_yolo_train(self, data_path, epochs, base_model, device_mode):
-        self.log(f"🚀 Initializing Training ({epochs} epochs)...")
+    def run_yolo_train(self, epochs, base_model, device_mode):
+        try:
+            # --- PREPARE DATA IN BACKGROUND (Fix UI Hang) ---
+            data_path = self.prepare_merged_dataset()
+            if not data_path:
+                self.log("❌ FATAL: Dataset preparation failed.")
+                self.training_active = False
+                self.after(0, lambda: self.train_btn.configure(text="START REAL TRAINING", state="normal", fg_color="#004400"))
+                return
+
+            self.log(f"🚀 Initializing Training ({epochs} epochs)...")
         self.log(f"🧠 Base Model: {os.path.basename(base_model)}")
         self.log("Note: Results will be saved to the 'runs' folder.")
         
