@@ -204,9 +204,10 @@ class OverlayApp(ctk.CTk):
             "magnet_smooth": 0.8,
             "magnet_radius": 50,
             "conf_threshold": 0.5,
-            "prediction_factor": 1.0, # New Prediction setting
-            "humanization": 0.2,     # v0.4.0
-            "lock_stability": 0.5,   # v0.4.0
+            "target_offset": -0.2,   # v0.7.6 Fix: Restore missing key
+            "prediction_factor": 1.0, 
+            "humanization": 0.2,     
+            "lock_stability": 0.5,   
             "mask_width": 0.0,
             "mask_height": 0.0,
             "mask_x_offset": 0.0,
