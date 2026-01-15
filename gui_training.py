@@ -305,10 +305,9 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 return
 
             self.log(f"🚀 Initializing Training ({epochs} epochs)...")
-        self.log(f"🧠 Base Model: {os.path.basename(base_model)}")
-        self.log("Note: Results will be saved to the 'runs' folder.")
-        
-        try:
+            self.log(f"🧠 Base Model: {os.path.basename(base_model)}")
+            self.log("Note: Results will be saved to the 'runs' folder.")
+
             # --- ISOLATED COMPUTE INITIALIZATION ---
             os.environ["ULTRALYTICS_CHECK"] = "False" # Fix hang on update check
             os.environ["YOLO_VERBOSE"] = "False"      # Keep logs clean
