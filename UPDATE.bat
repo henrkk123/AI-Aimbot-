@@ -1,18 +1,17 @@
 @echo off
-title AXION ENGINE - STABILITY REPAIR v0.6.2
+title AXION ENGINE - ULTIMATE STABILITY v0.7.7
 cls
-color 0b
+color 0a
 
 :: Force working directory
 cd /d "%~dp0"
 
 echo --------------------------------------------------
-echo    AXION CORE: UNBREAKABLE INSTALLER v0.6.2
+echo    AXION CORE: ULTIMATE INSTALLER v0.7.7
 echo --------------------------------------------------
 echo.
-echo [!] This is the high-stability version for Admin users.
+echo [!] This is the high-stability version for Axion 0.7.
 echo.
-pause
 
 echo [STEP 1/4] CLEANING PROCESSES...
 taskkill /F /IM python.exe /T 2>nul
@@ -81,6 +80,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ==================================================
-echo    ✅ AXION CORE v0.6.2 IS READY.
+echo    ✅ AXION CORE v0.7.7 IS READY.
 echo ==================================================
-pause
+timeout /t 5
+exit /b 0

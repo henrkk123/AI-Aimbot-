@@ -1,0 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700;900&family=JetBrains+Mono:wght@100;400;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent: #00ffff;
+  --bg: #050505;
+}
+
+body {
+  background-color: var(--bg);
+  color: white;
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+  cursor: crosshair;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Gritty Texture Overlay */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 9999;
+  filter: contrast(150%) brightness(100%);
+}
+
+/* Scanline Effect */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(0, 0, 0, 0.1) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+@layer utilities {
+  .glitch-border {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -2px 0 0 var(--accent), 2px 0 0 #ff00ff;
+  }
+}
+
+/* Custom Selection */
+::selection {
+  background: var(--accent);
+  color: black;
+}

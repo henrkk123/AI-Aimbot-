@@ -25,8 +25,8 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         self.header_frame = ctk.CTkFrame(self, fg_color="#1a1a1a", height=60, corner_radius=0)
         self.header_frame.pack(fill="x", side="top")
         
-        self.label = ctk.CTkLabel(self.header_frame, text="NEURAL CORE TRAINER", 
-                                  font=("Orbitron", 24, "bold"), text_color="#00ffff")
+        self.label = ctk.CTkLabel(self.header_frame, text="AXION CORE TRAINER", 
+                                  font=("Orbitron", 24, "bold"), text_color="#00ff00")
         self.label.pack(pady=15)
         
         # Content Grid
