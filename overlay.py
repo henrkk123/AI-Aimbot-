@@ -331,16 +331,35 @@ class OverlayApp(ctk.CTk):
         else:
             self.training_window.focus()
 
-    def draw_bracket(self, x, y, w, h, length=20, color="#00ff00", thickness=2):
-        """Draws clean green corner brackets."""
-        self.canvas.create_line(x, y, x + length, y, fill=color, width=thickness)
-        self.canvas.create_line(x, y, x, y + length, fill=color, width=thickness)
-        self.canvas.create_line(x + w, y, x + w - length, y, fill=color, width=thickness)
-        self.canvas.create_line(x + w, y, x + w, y + length, fill=color, width=thickness)
-        self.canvas.create_line(x, y + h, x + length, y + h, fill=color, width=thickness)
-        self.canvas.create_line(x, y + h, x, y + h - length, fill=color, width=thickness)
-        self.canvas.create_line(x + w, y + h, x + w - length, y + h, fill=color, width=thickness)
-        self.canvas.create_line(x + w, y + h, x + w, y + h - length, fill=color, width=thickness)
+    def draw_bracket(self, x, y, w, h, length=20, color="#00ff00", thickness=3):
+        """Draws high-end layered Cyber-Brackets v0.8.8."""
+        glow_color = "#004400"
+        outer_offset = 2
+        
+        # Draw Outer Glow/Depth Layers
+        for offset in [outer_offset, 0]:
+            cur_color = glow_color if offset > 0 else color
+            cur_thick = 1 if offset > 0 else thickness
+            ox, oy = x - offset, y - offset
+            ow, oh = w + (offset * 2), h + (offset * 2)
+            
+            # TL
+            self.canvas.create_line(ox, oy, ox + length, oy, fill=cur_color, width=cur_thick)
+            self.canvas.create_line(ox, oy, ox, oy + length, fill=cur_color, width=cur_thick)
+            # TR
+            self.canvas.create_line(ox + ow, oy, ox + ow - length, oy, fill=cur_color, width=cur_thick)
+            self.canvas.create_line(ox + ow, oy, ox + ow, oy + length, fill=cur_color, width=cur_thick)
+            # BL
+            self.canvas.create_line(ox, oy + oh, ox + length, oy + oh, fill=cur_color, width=cur_thick)
+            self.canvas.create_line(ox, oy + oh, ox, oy + oh - length, fill=cur_color, width=cur_thick)
+            # BR
+            self.canvas.create_line(ox + ow, oy + oh, ox + ow - length, oy + oh, fill=cur_color, width=cur_thick)
+            self.canvas.create_line(ox + ow, oy + oh, ox + ow, oy + oh - length, fill=cur_color, width=cur_thick)
+            
+        # Add small interior accents
+        accent_len = 5
+        self.canvas.create_line(x+accent_len, y+accent_len, x+accent_len*2, y+accent_len, fill=color, width=1)
+        self.canvas.create_line(x+accent_len, y+accent_len, x+accent_len, y+accent_len*2, fill=color, width=1)
 
     def draw_hud_elements(self, cx, cy):
         """Draws decorative HUD lines"""
