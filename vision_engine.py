@@ -85,6 +85,11 @@ class VisionEngine:
         self.mask_x_offset = 0.0     # v0.7.3: Lateral shift (-1 to 1)
         self.mask_y_offset = 0.5     # v0.7.3: Vertical shift (-1 to 1)
         self.last_inference_time = 0.0 # v0.6.4 performance tracking
+        
+        # v0.8.5: Temporal Stability
+        self.lost_frames = 0
+        self.max_lost_frames = 2     # Allow 2 frames of "blink" before dropping lock
+        self.last_best_box = None
 
     def capture_screen(self):
         """
@@ -160,9 +165,7 @@ class VisionEngine:
                 rel_x = cx - self.roi_left
                 rel_y = cy - self.roi_top
                 
-                if rel_y > (self.roi_size * 0.55): 
-                     if abs(rel_x - (self.roi_size / 2)) < (self.roi_size * 0.10):
-                         continue 
+                # [REMOVED v0.8.5] Rel_y skip logic. Now fully dependent on dynamic masking.
                 
                 # Score = Conf + Sticky Bonus + Lock Stability
                 score = confidence
@@ -199,6 +202,18 @@ class VisionEngine:
                     best_box = (global_x1, global_y1, w, h, confidence, int(pred_x), int(pred_y))
                     best_center = (cx, cy)
         
+        if best_box:
+            self.lost_frames = 0
+            self.last_best_box = best_box
+        else:
+            self.lost_frames += 1
+            if self.lost_frames <= self.max_lost_frames and self.last_best_box:
+                # Ghost Lock: Return previous box but with 0 confidence to signal its a 'prediction'
+                old_x, old_y, old_w, old_h, old_conf, old_px, old_py = self.last_best_box
+                best_box = (old_x, old_y, old_w, old_h, 0.01, old_px, old_py)
+            else:
+                self.last_best_box = None
+
         # Update memory
         self.last_target_center = best_center
         self.last_capture_time = t_start

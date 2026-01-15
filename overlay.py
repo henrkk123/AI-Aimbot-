@@ -200,9 +200,9 @@ class OverlayApp(ctk.CTk):
     def load_config(self):
         # Default values
         defaults = {
-            "smooth_factor": 0.4,    # v0.8.0: Tuned for snappiness
-            "magnet_smooth": 0.8,
-            "magnet_radius": 50,
+            "smooth_factor": 0.5,    # v0.8.5: Extreme snappiness
+            "magnet_smooth": 0.9,
+            "magnet_radius": 60,
             "conf_threshold": 0.5,
             "target_offset": -0.2,   # v0.7.6 Fix: Restore missing key
             "prediction_factor": 1.0, 
@@ -368,9 +368,14 @@ class OverlayApp(ctk.CTk):
         panel_y = 30
         
         status_color = "#00ff00"
-        if "ERROR" in self.engine_status: status_color = "#ff0000"
+        stability_text = "STABILITY: PERFECT"
+        if "ERROR" in self.engine_status: 
+            status_color = "#ff0000"
+        elif self.vision.lost_frames > 0:
+            status_color = "#ffff00" # Yellow
+            stability_text = "STABILITY: BUFFERING"
         
-        diag_text = f"AXION CORE: {self.engine_status}  |  {avg_fps:.0f} FPS"
+        diag_text = f"AXION CORE: {self.engine_status}  |  {stability_text}  |  {avg_fps:.0f} FPS"
         if self.use_vision:
             diag_text += f"  |  {self.vision.last_inference_time*1000:.1f}ms"
             
@@ -480,7 +485,7 @@ class OverlayApp(ctk.CTk):
                         smooth = self.magnet_smooth.get()
                     
                     move_mouse_to(aim_x, aim_y, smooth_factor=smooth, humanization=self.humanization.get())
-                    self.canvas.create_text(scx, 50, text="CORE // MAGNETIC LOCK ACTIVE", fill="#00ff00", font=("Orbitron", 14, "bold"))
+                    self.canvas.create_text(scx, 60, text="AXION CORE // MECHANICAL LOCK ENGAGED", fill="#00ff00", font=("Orbitron", 12, "bold"))
                 except Exception as e: print(f"Mouse Error: {e}")
         
         self.after(10, self.update_overlay)
