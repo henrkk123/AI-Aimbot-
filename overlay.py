@@ -472,11 +472,17 @@ class OverlayApp(ctk.CTk):
             # Combat Logic
             if self.mouse_control_var.get():
                 try:
-                    from mouse_control import move_mouse_to
+                    from mouse_control import move_mouse_relative
                     import math
                     # Aim at predicted point if enabled, else current center
                     aim_x, aim_y = (px, py) if self.prediction_factor.get() > 0 else (cx, cy)
-                    dist = math.hypot(aim_x - scx, aim_y - scy)
+                    
+                    # --- KINETIC SYNC v0.8.7 ---
+                    # Calculate delta relative to screen center (crosshair)
+                    dx_raw = aim_x - scx
+                    dy_raw = aim_y - scy
+                    
+                    dist = math.hypot(dx_raw, dy_raw)
                     
                     smooth = self.smooth_factor.get()
                     rad = self.magnet_radius.get()
@@ -484,8 +490,8 @@ class OverlayApp(ctk.CTk):
                     if dist < rad: 
                         smooth = self.magnet_smooth.get()
                     
-                    move_mouse_to(aim_x, aim_y, smooth_factor=smooth, humanization=self.humanization.get())
-                    self.canvas.create_text(scx, 60, text="AXION CORE // MECHANICAL LOCK ENGAGED", fill="#00ff00", font=("Orbitron", 12, "bold"))
+                    move_mouse_relative(dx_raw, dy_raw, smooth_factor=smooth, humanization=self.humanization.get())
+                    self.canvas.create_text(scx, 60, text="AXION CORE // KINETIC SYNC ACTIVE", fill="#00ff00", font=("Orbitron", 12, "bold"))
                 except Exception as e: print(f"Mouse Error: {e}")
         
         self.after(10, self.update_overlay)
