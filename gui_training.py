@@ -189,24 +189,44 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
         if os.path.exists(merged_dir): shutil.rmtree(merged_dir)
         
         # Proper YOLO structure
-        os.makedirs(os.path.join(merged_dir, "images", "train"))
-        os.makedirs(os.path.join(merged_dir, "labels", "train"))
+        os.makedirs(os.path.join(merged_dir, "images", "train"), exist_ok=True)
+        os.makedirs(os.path.join(merged_dir, "labels", "train"), exist_ok=True)
         
         total_imgs = 0
         
         for i, src in enumerate(self.dataset_paths):
-            self.log(f"   -> Copying {os.path.basename(src)}...")
-            for f in os.listdir(src):
-                f_lower = f.lower()
-                if f_lower.endswith(('.jpg', '.png', '.jpeg')):
-                    new_name = f"{i}_{f}"
-                    shutil.copy2(os.path.join(src, f), os.path.join(merged_dir, "images", "train", new_name))
-                    total_imgs += 1
-                elif f_lower.endswith('.txt') and f != "classes.txt":
-                    new_name = f"{i}_{f}"
-                    shutil.copy2(os.path.join(src, f), os.path.join(merged_dir, "labels", "train", new_name))
+            self.log(f"   -> Scanning {os.path.basename(src)} (including subfolders)...")
+            
+            # Find all images recursively
+            for root, dirs, files in os.walk(src):
+                for f in files:
+                    f_lower = f.lower()
+                    if f_lower.endswith(('.jpg', '.png', '.jpeg', '.bmp')):
+                        img_path = os.path.join(root, f)
+                        
+                        # Look for matching label (recursive)
+                        # We assume the label shares the same filename.txt
+                        label_name = os.path.splitext(f)[0] + ".txt"
+                        label_path = None
+                        
+                        # Search for the label in the same directory or sibling/labels folders
+                        # Standard YOLO structures have images/ and labels/ subfolders
+                        # If image is in 'path/images/train/1.jpg', label is often in 'path/labels/train/1.txt'
+                        possible_label_roots = [root, root.replace("images", "labels")]
+                        for p_root in possible_label_roots:
+                            check_path = os.path.join(p_root, label_name)
+                            if os.path.exists(check_path):
+                                label_path = check_path
+                                break
+                        
+                        if label_path:
+                            new_name = f"{i}_{f}"
+                            new_label_name = f"{i}_{label_name}"
+                            shutil.copy2(img_path, os.path.join(merged_dir, "images", "train", new_name))
+                            shutil.copy2(label_path, os.path.join(merged_dir, "labels", "train", new_label_name))
+                            total_imgs += 1
                     
-        self.log(f"✅ Merged {total_imgs} images into '{merged_dir}'")
+        self.log(f"✅ Merged {total_imgs} images with labels into '{merged_dir}'")
         
         # Create Config
         yaml_path = os.path.join(merged_dir, "data.yaml")
@@ -336,8 +356,7 @@ class TrainingWindow(ctk.CTk): # Changed from Toplevel to CTk for standalone run
                 plots=True,
                 batch=32,           # Optimized for RTX 5070
                 cache=True,         # Auto-cache (safer than 'ram' for 16k images)
-                workers=4,          # Lowered for Windows stability
-                persistent_workers=True,
+                workers=2,          # Reduced for extreme overhead stability
                 amp=True,           # Blackwell specialty
                 exist_ok=True,      # Prevent permission errors on retry
                 save=True
